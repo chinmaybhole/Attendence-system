@@ -1,3 +1,3 @@
 # Database-system
-1.Notes and codes of Database\n
-Add note in notes folder & code in codes folder
+Notes and codes of Database, 
+add note in notes folder & code in codes folder
