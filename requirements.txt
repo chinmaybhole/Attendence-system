@@ -1,0 +1,5 @@
+flask
+flask-blueprint
+mysql-connector-python
+restapi-client
+
