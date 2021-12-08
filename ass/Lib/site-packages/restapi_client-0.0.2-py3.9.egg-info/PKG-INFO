@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: restapi-client
+Version: 0.0.2
+Summary: Lib for call RestApi services
+Home-page: https://github.com/berlotto/restapi-client
+Author: Sérgio Berlotto Junior
+Author-email: sergio.berlotto@gmail.com
+License: GPLv3
+Description: UNKNOWN
+Keywords: restapi client generic restfull
+Platform: UNKNOWN
