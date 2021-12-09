@@ -1,0 +1,7 @@
+flask
+flask-blueprint
+mysql-connector-python
+restapi-client
+Flask-CLI
+click
+sqlite3
