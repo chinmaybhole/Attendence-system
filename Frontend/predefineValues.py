@@ -4,6 +4,8 @@ from tkinter import *
 
 def screenDisplay(window) :
     window.geometry("1000x700")
+    window.configure(background="#ffbdbd")
+    window.title("Attendance System")
     
 
 
