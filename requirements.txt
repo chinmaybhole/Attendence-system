@@ -6,3 +6,4 @@ Flask-CLI
 click
 sqlite3
 tk
+pyserial
