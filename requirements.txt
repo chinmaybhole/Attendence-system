@@ -7,3 +7,4 @@ click
 sqlite3
 tk
 pyserial
+flask_swagger_ui
