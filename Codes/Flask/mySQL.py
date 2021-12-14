@@ -1,2 +1,12 @@
-import _mysql_connector
-print(help(_mysql_connector))
+import mysql.connector
+db = mysql.connector.connect(
+    host="Localhost",
+    user="root",
+    passwd="root",
+    database="testdatabase"
+)
+
+mycursor = db.cursor()
+
+#Creating a database
+#mycursor.execute("CREATE DATABASE testdatabase") 
