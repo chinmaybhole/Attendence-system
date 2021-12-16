@@ -1,8 +1,55 @@
 import sqlite3
-conn = sqlite3.connect('company.sqlite ')
+conn = sqlite3.connect('college.sqlite ')
+
 
 cur = conn.cursor()
 #Before creating table, drop if it exists
+'''
+cur.execute('DROP TABLE IF EXISTS user')
+##Create table department
+cur.execute("""CREATE TABLE user
+    (
+    SrNo INTEGER NOT NULL PRIMARY KEY,
+    Uid INTEGER NOT NULL,
+	name TEXT NOT NULL,
+    Dept TEXT,
+    phoneNo TEXT	
+    )
+""")"""
+"""
+cur.execute('DROP TABLE IF EXISTS access_control')
+##Create table department
+cur.execute("""CREATE TABLE access_control
+    (
+	roomId TEXT NOT NULL,
+ 	sno INTEGER NOT NULL,
+    FOREIGN KEY (SNo) REFERENCES user (SrNo)
+    )
+""")
+cur.execute('DROP TABLE IF EXISTS room')
+##Create table department
+cur.execute("""CREATE TABLE room
+    (
+	tsrno TEXT NOT NULL PRIMARY KEY,
+    roomname TEXT NOT NULL,
+    tin INTEGER NOT NULL,
+    tout INTEGER NOT NULL,
+ 	uid INTEGER NOT NULL,
+    FOREIGN KEY (uid) REFERENCES user (SrNo)
+    )
+""")'''
+cur.execute('DROP TABLE IF EXISTS logs')
+##Create table department
+cur.execute("""CREATE TABLE logs
+    (
+	tsrno TEXT NOT NULL PRIMARY KEY,
+    roomname TEXT NOT NULL,
+    tin INTEGER NOT NULL,
+    tout INTEGER NOT NULL,
+ 	uid INTEGER NOT NULL,
+    FOREIGN KEY (uid) REFERENCES user (SrNo)
+    )
+""")
 
 ##cur.execute('DROP TABLE IF EXISTS department')
 ##Create table department
@@ -94,7 +141,7 @@ cur = conn.cursor()
 # """)
 #
 
-cur.execute("""ALTER TABLE department
-          ADD COLUMN mgr_ssn TEXT REFERENCES employee(ssn);
-""")
+#cur.execute("""ALTER TABLE department
+#          ADD COLUMN mgr_ssn TEXT REFERENCES employee(ssn);
+#""")
 
