@@ -38,18 +38,26 @@ cur.execute("""CREATE TABLE room
     FOREIGN KEY (uid) REFERENCES user (SrNo)
     )
 """)'''
-cur.execute('DROP TABLE IF EXISTS logs')
-##Create table department
-cur.execute("""CREATE TABLE logs
-    (
-	tsrno TEXT NOT NULL PRIMARY KEY,
-    roomname TEXT NOT NULL,
-    tin INTEGER NOT NULL,
-    tout INTEGER NOT NULL,
- 	uid INTEGER NOT NULL,
-    FOREIGN KEY (uid) REFERENCES user (SrNo)
-    )
-""")
+############################################################
+#### RUN THIS SNIPPETS AFTER DISCUSSING ABOUT LOGS TABLES ###
+############################################################
+#
+#cur.execute('DROP TABLE IF EXISTS logs')
+###Create table department
+#cur.execute("""CREATE TABLE logs
+#    (
+#	tsrno TEXT NOT NULL PRIMARY KEY,
+#    roomname TEXT NOT NULL,
+#    tin INTEGER NOT NULL,
+#    tout INTEGER NOT NULL,
+# 	uid INTEGER NOT NULL,
+#    FOREIGN KEY (uid) REFERENCES user (SrNo)
+#    )
+#""")
+
+############################################################
+#### RUN THIS SNIPPETS AFTER DISCUSSING ABOUT LOGS TABLES ###
+############################################################
 
 ##cur.execute('DROP TABLE IF EXISTS department')
 ##Create table department
