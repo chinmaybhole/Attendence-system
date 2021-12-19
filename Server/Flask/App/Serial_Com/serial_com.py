@@ -1,9 +1,12 @@
 from decode import decode
+import serial
 
-print(decode("1A69D"))
 
-# import serial
-# from serial import Serial
 
-# ser = serial.Serial('COM3',9600)
-# data = ser.readline(1000)
+ser = serial.Serial('COM6',9600)
+data = ser.readline()
+stri= data.decode("utf-8")
+# print(data)
+print(stri)
+
+# print(decode(stri))

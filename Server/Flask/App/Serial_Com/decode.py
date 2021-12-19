@@ -22,14 +22,15 @@ def num_decode(data):
 # decode
 def decode(data_list):
     arr = list(string.ascii_uppercase)
+    data_list=list(data_list)
     dec = []
     for i in range(len(data_list)):
         if data_list[i].isalpha():
             if data_list[i] in arr:
                 c= alp_decode(data_list[i],arr,arr[::-1])
                 dec.append(c)
-            else:
-                return print("Error in data!!!")
+            # else:
+            #     return print("Error in data!!!")
         elif data_list[i].isnumeric():
             dec.append(num_decode(data_list[i]))
     return "".join(dec)

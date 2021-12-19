@@ -16,9 +16,7 @@
             "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "C:\\Program Files\\Arduino-1.8.16\\hardware\\arduino\\avr\\cores\\arduino",
-                "C:\\Program Files\\Arduino-1.8.16\\hardware\\arduino\\avr\\variants\\standard",
-                "C:\\Users\\abbin\\OneDrive\\Documents\\Arduino\\libraries\\AddicoreRFID-master",
-                "C:\\Program Files\\Arduino-1.8.16\\hardware\\arduino\\avr\\libraries\\SPI\\src",
+                "C:\\Program Files\\Arduino-1.8.16\\hardware\\arduino\\avr\\variants\\mega",
                 "c:\\program files\\arduino-1.8.16\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include",
                 "c:\\program files\\arduino-1.8.16\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include-fixed",
                 "c:\\program files\\arduino-1.8.16\\hardware\\tools\\avr\\avr\\include"
@@ -31,7 +29,7 @@
             "defines": [
                 "F_CPU=16000000L",
                 "ARDUINO=10816",
-                "ARDUINO_AVR_UNO",
+                "ARDUINO_AVR_MEGA2560",
                 "ARDUINO_ARCH_AVR",
                 "__DBL_MIN_EXP__=(-125)",
                 "__HQ_FBIT__=15",
