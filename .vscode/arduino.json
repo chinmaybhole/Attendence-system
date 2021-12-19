@@ -1,6 +1,7 @@
 {
-    "port": "COM3",
-    "board": "arduino:avr:uno",
+    "port": "COM6",
+    "board": "arduino:avr:mega",
     "sketch": "Arduino\\serial_com.ino",
+    "configuration": "cpu=atmega2560",
     "programmer": "arduino:avrisp"
 }
