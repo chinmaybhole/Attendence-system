@@ -49,6 +49,7 @@ conn.execute('''CREATE TABLE users
     uid integer NOT NULL,
     fname text NOT NULL,
     lname text NOT NULL,
+    passw text null,
     dept text NOT NULL,
     phone text NULL,
     isStudent int NOT NULL,
@@ -58,7 +59,7 @@ conn.execute('''CREATE TABLE users
 # Insert Data into table user
 def insert_user(user):
     with conn:
-        c.execute("INSERT INTO users(uid,fname,lname,dept,phone,isStudent,isProfessor) VALUES(:uid,:fname,:lname,:dept,:phoneno,:isStudent,:isProfessor)",{'uid': user.uid,'fname': user.fname,'lname': user.lname,'dept':user.dept,'phoneno': user.phoneno,'isStudent': user.isStudent,'isProfessor': user.isProfessor})
+        c.execute("INSERT INTO users(uid,fname,lname,passw,dept,phone,isStudent,isProfessor) VALUES(:uid,:fname,:lname,:passw,:dept,:phoneno,:isStudent,:isProfessor)",{'uid': user.uid,'fname': user.fname,'lname': user.lname,'passw':user.passw,'dept':user.dept,'phoneno': user.phoneno,'isStudent': user.isStudent,'isProfessor': user.isProfessor})
 
 # Delete Data of table user
 def delete_user(user):
@@ -130,26 +131,41 @@ c.execute("""CREATE TABLE LOG
 # c.execute(f"INSERT INTO users(uid,fname,lname,dept,phone,isStudent,isProfessor) VALUES({user2.uid},{user2.fname},{user2.lname},{user2.dept},{user2.phoneno},{user2.isStudent},{user2.isProfessor})")
 
 # c.execute("DROP TABLE users")
-arg1 = sys.argv[1]
-arg2 = sys.argv[2]
-arg3 = sys.argv[3]
-# user1 =  Users('Abbas', 'A', 2220200309,'extc',1,132468579,1,0)
-# user2 =  Users('ABC', 'D', 2220200310,'extc',1,132468579,0,1)
-room = Rooms(arg1,arg2,arg3)
+# arg1 = sys.argv[1]
+# arg2 = sys.argv[2]
+# arg3 = sys.argv[3]
+user1 =  Users('Abbas', 'A', 2220200309,'extc',1,132468579,1,0)
+user2 =  Users('Shinde', 'D', 2220200310,'extc',1,132468579,0,1)
+user3 =  Users('Chinmay', 'B', 2220200309,'extc',1,132468579,1,0)
+user4 =  Users('Yash', 'S', 2220200309,'extc',1,132468579,1,0)
+user5 =  Users('Aniket', 'G', 2220200309,'extc',1,132468579,1,0)
+user6 =  Users('Kavita', 'C', 2220200310,'extc',1,132468579,0,1)
 
-# insert_user(user1)
-# insert_user(user2)
-insert_rooms(room)
+
+
+# room = Rooms(arg1,arg2,arg3)
+
+insert_user(user1)
+insert_user(user2)
+insert_user(user3)
+insert_user(user4)
+insert_user(user5)
+insert_user(user6)
+
+# insert_rooms(room)
 
 #print(arg1,arg2,arg3)
 
 conn.commit()
 
-c.execute("SELECT * from users")
-pprint(c.fetchall())
+# c.execute("SELECT * from users")
+# pprint(c.fetchall())
 
-c.execute("SELECT * from room")
-pprint(c.fetchall())
+# c.execute("SELECT * from room")
+# pprint(c.fetchall())
 
+c.execute(" SELECT * FROM users WHERE isProfessor = 1")
+pprint(c.fetchall())
 conn.close()
 
+  

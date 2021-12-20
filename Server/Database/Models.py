@@ -2,10 +2,11 @@ import datetime
 
 class Users:
 
-    def __init__(self, fname, lname, uid, dept, rollno, phoneno, isStudent, isProfessor,id=None):
+    def __init__(self, fname, lname, uid, dept, rollno, phoneno, isStudent, isProfessor,passw=None,id=None):
         self.id = id
         self.fname = fname
         self.lname = lname
+        self.passw = passw
         self.uid = uid
         self.dept = dept
         self.rollno = rollno
@@ -14,10 +15,10 @@ class Users:
         self.isProfessor = isProfessor
 
     def __repr__(self):
-        return f"Users('{self.fname}','{self.lname}','{self.uid}','{self.rollno}','{self.phoneno}','{self.isStudent}','{self.isProfessor}')"
+        return f"Users('{self.fname}','{self.lname}','{self.uid}','{self.dept}','{self.rollno}','{self.phoneno}','{self.isStudent}','{self.isProfessor}')"
 
 class Rooms:
-    def __init__(self, roomid,  timein, timeout, id =None, userid=None,):
+    def __init__(self, roomid,  timein, timeout, id =None, userid=None):
         self.id = id
         self.roomid = roomid
         self.userid = userid
@@ -36,3 +37,8 @@ class Logs:
 
     def __repr__(self):
         return f"Logs('{self.userid}','{self.roomid}','{self.timein}','{self.timeout}')"
+
+def printfun(pdata):
+
+
+    return f""
