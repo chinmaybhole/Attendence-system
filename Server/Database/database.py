@@ -204,7 +204,9 @@ def getRoom(room):
 
 ##################################################### DISPLAY DATA ################################################
 
-getRoom(802)
+getAllRooms()
+getAllUsers()
+
 
 conn.close()
 
