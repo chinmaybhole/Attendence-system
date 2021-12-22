@@ -5,12 +5,12 @@ from pprint import pprint
 
 conn = sqlite3.connect('Access_System.db')
 c = conn.cursor()
-conn.execute("PRAGMA foreign_keys = ON")
+c.execute("PRAGMA foreign_keys = ON")
 
 user1 =  Users(2220200309,'Abbas', 'A',"abbas", 1,'extc',132468579,1)
-room = Rooms(801,"phy",1)
+room = Rooms(801,"physics lab",1)
 
-ac = Access_Control("12:41","1:45",1)
+ac = Access_Control("12:41","1:45",1,801)
 
 
 
@@ -24,23 +24,24 @@ ac = Access_Control("12:41","1:45",1)
 
 try:
     # create table Users
-    conn.execute('''CREATE TABLE IF NOT EXISTS USERS
+    c.execute('''CREATE TABLE USERS
     (
-        id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        uid integer NOT NULL,
-        fname text NOT NULL,
-        lname text NOT NULL,
-        passw text NOT NULL,
-        dept text NOT NULL,
-        phone text NOT NULL,
-        isStudent int NOT NULL
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userid INTEGER NOT NULL,
+        fname TEXT NOT NULL,
+        lname TEXT NOT NULL,
+        passw TEXT NOT NULL,
+        rollno INTEGER NOT NULL,
+        dept TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        isStudent INTEGER NOT NULL
     ) ''')
 
 except sqlite3.OperationalError :
     pass
 
     # Insert Data into table user
-    Users.insert_user(user1,conn,c)
+    # Users.insert_user(user1,conn,c)
 
     # Delete Data of table user
     # Users.delete_user(user1,conn)
@@ -52,14 +53,14 @@ except sqlite3.OperationalError :
 try:
     # pass
     #Create table Room
-    c.execute("""CREATE TABLE IF NOT EXISTS ROOMS
+    c.execute("""CREATE TABLE ROOMS
         (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             roomid INTEGER NOT NULL,
             roomname TEXT NOT NULL,
-            uid INTEGER NULL,
-            FOREIGN KEY (uid) 
-            REFERENCES USERS (id)
+            uid INTEGER NOT NULL,
+            FOREIGN KEY(uid) 
+            REFERENCES USERS(id)
         )
     """)
     
@@ -78,18 +79,19 @@ except sqlite3.OperationalError :
 #################################################### TABLE ACCESS_CONTROL #################################################
 
 try:
+    # pass
     # Create table Access_Control
-    c.execute("""CREATE TABLE IF NOT EXISTS ACCESS_CONTROL
+    c.execute("""CREATE TABLE ACCESS_CONTROL
         (
-        srno integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        timein text not null,
-        timeout text not null,
-        userid INTEGER NULL,
-        rid Integer NULL,
-        FOREIGN KEY (userid) 
-        REFERENCES USERS (uid),
-        FOREIGN KEY (rid) 
-        REFERENCES ROOMS (roomid)
+        srno INTEGER PRIMARY KEY AUTOINCREMENT,
+        timein TEXT NOT NULL,
+        timeout TEXT NOT NULL,
+        userid INTEGER NOT NULL,
+        roomid INTEGER NOT NULL,
+        FOREIGN KEY(userid) 
+        REFERENCES USERS(userid),
+        FOREIGN KEY(roomid) 
+        REFERENCES ROOMS(id)
         )
     """)
 
@@ -109,13 +111,13 @@ except sqlite3.OperationalError :
 
 try:
     # Create Table Log
-    c.execute("""CREATE TABLE IF NOT EXISTS LOG 
+    c.execute("""CREATE TABLE LOG 
     ( 
-        srno integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        uid integer NOT NULL,
-        roomid integer NOT NULL,
-        timein integer NOT NULL,
-        timeout integer NOT NULL,
+        srno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        uid INTEGER NOT NULL,
+        roomid INTEGER NOT NULL,
+        timein INTEGER NOT NULL,
+        timeout INTEGER NOT NULL,
         FOREIGN KEY (timein) 
         REFERENCES ROOMS (timein),
         FOREIGN KEY (timeout) 
@@ -175,11 +177,13 @@ Rooms.getAllRooms(conn,c)
 
 Access_Control.getAllACData(conn,c)
 
+Logs.getLogs(conn,c)
+
 ##################################################### DISPLAY DATA ################################################
 
 # getAllRooms()
 # getAllUsers()
-# c.execute("SELECT * FROM room")
+# c.execute("SELECT * FROM USERS")
 # pprint(c.fetchall())
 
 
