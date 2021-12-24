@@ -100,9 +100,9 @@ class Logs:
         self.timeout = timeout
 
     # insert data to logs
-    def insertDataToLog(conn,c,data):
+    def insertDataToLog(conn,c,log):
         with conn:
-            c.execute(" INSERT INTO LOG()")
+            c.execute(" INSERT INTO LOG(uid,rid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout);",{'userid': log.userid,'roomid': log.roomid,'timein': log.timein,'timeout': log.timeout})
 
     # get all logs
     def getLogs(conn,c):
@@ -117,7 +117,7 @@ class Logs:
 
 class Access_Control:
 
-    def __init__(self,timein,timeout,userid,roomid,srno=None):
+    def __init__(self,userid,roomid,timein=None,timeout=None,srno=None):
         self.srno = srno
         self.userid = userid
         self.roomid = roomid
@@ -127,10 +127,15 @@ class Access_Control:
     #insert data to table access_system
     def insert_access_control(ac,conn,c):
         with conn:
-            c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout)",{'userid':ac.userid,'roomid':ac.roomid,'timein': ac.timein,'timeout': ac.timeout})
+            c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid) VALUES(:userid,:roomid)",{'userid':ac.userid,'roomid':ac.roomid})
+            # c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout)",{'userid':ac.userid,'roomid':ac.roomid,'timein': ac.timein,'timeout': ac.timeout})
+
 
     # display all data
     def getAllACData(conn,c):
         with conn:
             c.execute("SELECT * FROM ACCESS_CONTROL")
             pprint(c.fetchall())
+
+
+2220200210,'Shinde', 'U',"shinde", 24,'extc',456879213,0

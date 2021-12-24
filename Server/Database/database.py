@@ -3,14 +3,16 @@ import sys
 from Models import *
 from pprint import pprint
 
-conn = sqlite3.connect('Access_System.db')
+conn = sqlite3.connect('Access_Control.sqlite')
 c = conn.cursor()
 c.execute("PRAGMA foreign_keys = ON")
 
 user1 =  Users(2220200309,'Abbas', 'A',"abbas", 1,'extc',132468579,1)
 room = Rooms(801,"physics lab",1)
 
-ac = Access_Control("12:41","1:45",1,801)
+ac = Access_Control(1,801)
+
+log = Logs(2220200309,801,"12:41","1:45")
 
 
 
@@ -23,19 +25,19 @@ ac = Access_Control("12:41","1:45",1,801)
 #################################################### TABLE USERS #################################################
 
 try:
-    # create table Users
+#     # create table Users
     c.execute('''CREATE TABLE USERS
     (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         userid INTEGER NOT NULL,
         fname TEXT NOT NULL,
         lname TEXT NOT NULL,
         passw TEXT NOT NULL,
-        rollno INTEGER NOT NULL,
+        rollno INTEGER,
         dept TEXT NOT NULL,
         phone TEXT NOT NULL,
         isStudent INTEGER NOT NULL
-    ) ''')
+    ); ''')
 
 except sqlite3.OperationalError :
     pass
@@ -55,14 +57,15 @@ try:
     #Create table Room
     c.execute("""CREATE TABLE ROOMS
         (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            roomid INTEGER NOT NULL,
+            rid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            roomid INTEGER NOT NULL, 
             roomname TEXT NOT NULL,
             uid INTEGER NOT NULL,
             FOREIGN KEY(uid) 
             REFERENCES USERS(id)
-        )
+        );
     """)
+    
     
 except sqlite3.OperationalError :
     pass
@@ -78,28 +81,30 @@ except sqlite3.OperationalError :
 
 #################################################### TABLE ACCESS_CONTROL #################################################
 
+
+
 try:
     # pass
-    # Create table Access_Control
     c.execute("""CREATE TABLE ACCESS_CONTROL
         (
-        srno INTEGER PRIMARY KEY AUTOINCREMENT,
-        timein TEXT NOT NULL,
-        timeout TEXT NOT NULL,
-        userid INTEGER NOT NULL,
-        roomid INTEGER NOT NULL,
-        FOREIGN KEY(userid) 
-        REFERENCES USERS(userid),
-        FOREIGN KEY(roomid) 
-        REFERENCES ROOMS(id)
-        )
+            srno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            timein TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            timeout TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            userid INTEGER NOT NULL,
+            roomid INTEGER NOT NULL,
+            FOREIGN KEY(userid) 
+            REFERENCES USERS(id)
+        );
     """)
+    # FOREIGN KEY(roomid) 
+    #         REFERENCES ROOMS(rid),
+    
 
 except sqlite3.OperationalError :
     pass
 
     # Insert data into Access_control
-    Access_Control.insert_access_control(ac,conn,c)
+    # Access_Control.insert_access_control(ac,conn,c)
         
     # Delete data from Access_control
 
@@ -111,25 +116,30 @@ except sqlite3.OperationalError :
 
 try:
     # Create Table Log
-    c.execute("""CREATE TABLE LOG 
-    ( 
-        srno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        uid INTEGER NOT NULL,
-        roomid INTEGER NOT NULL,
-        timein INTEGER NOT NULL,
-        timeout INTEGER NOT NULL,
-        FOREIGN KEY (timein) 
-        REFERENCES ROOMS (timein),
-        FOREIGN KEY (timeout) 
-        REFERENCES ROOMS (timeout),
-        FOREIGN KEY (uid) 
-        REFERENCES USERS (uid),
-        FOREIGN KEY (roomid) 
-        REFERENCES ROOMS (roomid)
-    )
+    c.execute("""CREATE TABLE LOGS AS 
+                SELECT USERS.id AS 'LOGS_uid',
+                ROOMS.roomid AS 'LOGS_roomno',
+                ACCESS_CONTROL.timein AS 'LOGS_timein',
+                ACCESS_CONTROL.timeout AS 'LOGS_timeout'
+                FROM USERS,ROOMS,ACCESS_CONTROL
+                WHERE USERS.id = ROOMS.uid
+                AND ACCESS_CONTROL.timein AND ACCESS_CONTROL.timeout IS NOT NULL;
+    );
 """)
+    # c.execute("""
+    #     CREATE TABLE LOG AS 
+    #     SELECT
+    # """)
 except sqlite3.OperationalError :
     pass
+
+    # Logs.insertDataToLog(conn,c,log)
+#     CREATE TABLE demo(
+#   id INT PRIMARY KEY,
+#   time_in DATETIME DEFAULT CURRENT_TIME
+#   );
+  
+#   INSERT INTO demo(id) VALUES(1);
 
 ##################################################### TABLE ENDS ################################################
 
@@ -165,19 +175,19 @@ conn.commit()
 
 ##################################################### GET DATA ################################################
 
-Users.getAllUsers(conn,c)
+# Users.getAllUsers(conn,c)
 
 # Users.getStudent(conn)
 
 # Users.getProfessor(conn)
 
-Rooms.getAllRooms(conn,c)
+# Rooms.getAllRooms(conn,c)
 
 # Rooms.getRoom(conn,801,c)
 
-Access_Control.getAllACData(conn,c)
+# Access_Control.getAllACData(conn,c)
 
-Logs.getLogs(conn,c)
+# Logs.getLogs(conn,c)
 
 ##################################################### DISPLAY DATA ################################################
 
@@ -185,6 +195,10 @@ Logs.getLogs(conn,c)
 # getAllUsers()
 # c.execute("SELECT * FROM USERS")
 # pprint(c.fetchall())
+c.execute("""SELECT * FROM ROOMS WHERE USERS.id = ROOMS.uid
+""")
+pprint(c.fetchall())
+
 
 
 conn.close()
