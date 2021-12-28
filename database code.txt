@@ -1,0 +1,75 @@
+
+CREATE TABLE IF NOT EXISTS USERS
+    (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        userid INTEGER NOT NULL,
+        fname TEXT NOT NULL,
+        lname TEXT NOT NULL,
+        passw TEXT NOT NULL,
+        rollno INTEGER,
+        dept TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        isStudent INTEGER NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS ROOMS
+	(
+		rid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+		roomno INTEGER NOT NULL, 
+		roomname TEXT NOT NULL,
+		uid INTEGER NOT NULL,
+		FOREIGN KEY(uid) 
+		REFERENCES USERS(id)
+	);
+
+CREATE TABLE IF NOT EXISTS ACCESS_CONTROL
+        (
+            srno INTEGER PRIMARY KEY AUTOINCREMENT,
+            timein TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            timeout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            userid INTEGER NOT NULL,
+            rid INTEGER NOT NULL,
+            FOREIGN KEY(userid) REFERENCES USERS(id),
+            FOREIGN KEY(rid) REFERENCES ROOMS(rid)
+        );
+
+CREATE TABLE IF NOT EXISTS LOGS AS 
+	SELECT USERS.userid AS 'LOGS_uid',
+	ROOMS.roomno AS 'LOGS_roomno',
+	ACCESS_CONTROL.timein AS 'LOGS_timein',
+	ACCESS_CONTROL.timeout AS 'LOGS_timeout'
+	FROM USERS,ROOMS,ACCESS_CONTROL
+	WHERE USERS.id = ROOMS.uid
+    AND ACCESS_CONTROL.timein AND ACCESS_CONTROL.timeout IS NOT NULL;
+
+CREATE TRIGGER IF NOT EXISTS logs_trigger
+AFTER INSERT ON ACCESS_CONTROL
+WHEN new.timein AND new.timeout IS NOT NULL
+BEGIN
+	INSERT INTO LOGS(LOGS_uid,LOGS_roomno,LOGS_timein,LOGS_timeout) VALUES(new.userid,new.rid,new.timein,new.timeout);
+END;
+
+-- 
+INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(2220200309,"Abbas","A","abbas",1,"A","extc",1234657980,1);
+INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(2220200309,"Chinmay","B","chinmay",10,"A","extc",4657987123,1);
+INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(2220200310,"Yash","S","yash",51,"A","extc",1324689798,1);
+
+-- -- 
+INSERT INTO ROOMS(uid,roomno,roomname) VALUES(1,801,"physics lab");
+INSERT INTO ROOMS(uid,roomno,roomname) VALUES(2,801,"physics lab");
+INSERT INTO ROOMS(uid,roomno,roomname) VALUES(3,801,"physics lab");
+
+INSERT INTO ACCESS_CONTROL(userid,rid) VALUES(1,1);
+INSERT INTO ACCESS_CONTROL(userid,rid) VALUES(2,1);
+INSERT INTO ACCESS_CONTROL(userid,rid) VALUES(3,1);
+
+
+
+
+
+-- 
+
+
+-- SELECT * FROM USERS;
+-- SELECT * FROM ROOMS;
+-- SELECT * FROM ACCESS_CONTROL;

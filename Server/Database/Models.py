@@ -5,7 +5,7 @@ from pprint import pprint
 
 class Users:
 
-    def __init__(self, userid, fname, lname, passw, rollno, dept, phoneno, isStudent,id=None):
+    def __init__(self, userid, fname, lname, passw, rollno, div, dept, phoneno, isStudent,id=None):
         self.id = id
         self.fname = fname
         self.lname = lname
@@ -13,12 +13,13 @@ class Users:
         self.userid = userid
         self.dept = dept
         self.rollno = rollno
+        self.div = div
         self.phoneno = phoneno
         self.isStudent = isStudent
 
     def insert_user(user,conn,c):
         with conn:
-            c.execute("INSERT INTO USERS(userid,fname,lname,passw,rollno,dept,phone,isStudent) VALUES(:userid,:fname,:lname,:passw,:rollno,:dept,:phoneno,:isStudent)",{'userid': user.userid,'fname': user.fname,'lname': user.lname,'passw':user.passw,'rollno': user.rollno,'dept':user.dept,'phoneno': user.phoneno,'isStudent': user.isStudent})
+            c.execute("INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(:userid,:fname,:lname,:passw,:rollno,:div,:dept,:phoneno,:isStudent)",{'userid': user.userid,'fname': user.fname,'lname': user.lname,'passw':user.passw,'rollno': user.rollno,'div':user.div,'dept':user.dept,'phoneno': user.phoneno,'isStudent': user.isStudent})
 
     # Delete Data of table user
     def delete_user(user,conn,c):
@@ -53,9 +54,9 @@ class Users:
 
 class Rooms:
 
-    def __init__(self, roomid, roomname, uid,id= None):
+    def __init__(self, roomno, roomname, uid,id= None):
         self.id = id
-        self.roomid = roomid
+        self.roomno = roomno
         self.roomname = roomname
         self.uid = uid
        
@@ -63,16 +64,17 @@ class Rooms:
     # Insert Data Into table rooms
     def insert_rooms(room,conn,c):
         with conn:
-            c.execute("INSERT INTO ROOMS(uid,roomid,roomname) VALUES(:uid,:roomid,:roomname)",{'uid':room.uid,'roomid': room.roomid,'roomname':room.roomname})
+            c.execute("INSERT INTO ROOMS(uid,roomno,roomname) VALUES(:uid,:roomno,:roomname);",{'uid':room.uid,'roomno': room.roomno,'roomname':room.roomname})
     
     # Delete Data from table rooms
     def delete_rooms(room,conn,c):
         with conn:
-            c.execute("DELETE from ROOMS WHERE roomid = :roomid",{'roomid': room.roomid})
+            c.execute("DELETE FROM ROOMS WHERE roomno = :roomno",{'roomno': room.roomno})
 
     # Update Data Into table rooms
-    def update_rooms(room,conn,c):
-        pass
+    # def update_rooms(room,conn,c):
+    #     with conn:
+    #         c.execute("UPDA")
 
     # get all rooms
     def getAllRooms(conn,c):
@@ -82,11 +84,11 @@ class Rooms:
     # get one room
     def getRoom(conn,room,c):
         with conn:
-            c.execute(" SELECT * FROM ROOMS WHERE roomid = :roomid", {'roomid':room})
+            c.execute(" SELECT * FROM ROOMS WHERE roomno = :roomno", {'roomno':room})
             pprint(c.fetchall())
 
     def __repr__(self):
-        return f"Room('{self.id}','{self.roomid}','{self.uid}')"
+        return f"Room('{self.id}','{self.roomno}','{self.uid}')"
 
 #################################################### LOGS MODEL #################################################
 
@@ -99,16 +101,28 @@ class Logs:
         self.timein = timein
         self.timeout = timeout
 
+    def insert_trigger(conn,c):
+        with conn:
+            c.execute("""CREATE TRIGGER IF NOT EXISTS logs_trigger
+                        AFTER INSERT ON ACCESS_CONTROL
+                        WHEN new.timein AND new.timeout IS NOT NULL
+                        BEGIN
+                            INSERT INTO LOGS(LOGS_uid,LOGS_roomno,LOGS_timein,LOGS_timeout) VALUES(new.userid,new.rid,new.timein,new.timeout);
+                        END;
+                    """)
+
     # insert data to logs
     def insertDataToLog(conn,c,log):
         with conn:
-            c.execute(" INSERT INTO LOG(uid,rid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout);",{'userid': log.userid,'roomid': log.roomid,'timein': log.timein,'timeout': log.timeout})
+            c.execute(" INSERT INTO LOGS(uid,rid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout);",{'userid': log.userid,'roomid': log.roomid,'timein': log.timein,'timeout': log.timeout})
 
     # get all logs
     def getLogs(conn,c):
         with conn:
-            c.execute("SELECT * FROM LOG")
+            c.execute("SELECT * FROM LOGS")
             pprint(c.fetchall())
+    
+
 
     def __repr__(self):
         return f"Logs('{self.userid}','{self.roomid}','{self.timein}','{self.timeout}')"
@@ -117,17 +131,21 @@ class Logs:
 
 class Access_Control:
 
-    def __init__(self,userid,roomid,timein=None,timeout=None,srno=None):
+    def __init__(self,userid,rid,timein=None,timeout=None,srno=None):
         self.srno = srno
         self.userid = userid
-        self.roomid = roomid
+        self.rid = rid
         self.timein = timein
         self.timeout = timeout
+
+    # def timein_timeout_check(timein, timeout):
+    #     if timein >= timeout:
+    #         pass
 
     #insert data to table access_system
     def insert_access_control(ac,conn,c):
         with conn:
-            c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid) VALUES(:userid,:roomid)",{'userid':ac.userid,'roomid':ac.roomid})
+            c.execute("INSERT INTO ACCESS_CONTROL(userid,rid) VALUES(:userid,:rid)",{'userid':ac.userid,'rid':ac.rid})
             # c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout)",{'userid':ac.userid,'roomid':ac.roomid,'timein': ac.timein,'timeout': ac.timeout})
 
 
@@ -137,5 +155,9 @@ class Access_Control:
             c.execute("SELECT * FROM ACCESS_CONTROL")
             pprint(c.fetchall())
 
+    # update the timeout if timein exists 
+    def update_access_data(data,conn,c):
+        with conn:
+            c.execute("UPDATE ACCESS_CONTROL SET old.timeout= new.timeout WHERE timein")
 
-2220200210,'Shinde', 'U',"shinde", 24,'extc',456879213,0
+
