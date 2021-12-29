@@ -1,3 +1,4 @@
+from os import pardir
 import sqlite3
 import sys
 from Models import *
@@ -66,10 +67,10 @@ try:
     ); ''')
 
 except sqlite3.OperationalError :
-    # pass
+    pass
 
     # Insert Data into table user
-    Users.insert_user(user2,conn,c)
+    # Users.insert_user(user2,conn,c)
 
     # Delete Data of table user
     # Users.delete_user(user1,conn)
@@ -87,6 +88,7 @@ try:
             roomno INTEGER NOT NULL, 
             roomname TEXT NOT NULL,
             uid INTEGER NOT NULL,
+            profid INTEGER NOT NULL,
             FOREIGN KEY(uid) 
             REFERENCES USERS(id)
         );
@@ -94,10 +96,10 @@ try:
     
     
 except sqlite3.OperationalError :
-    # pass
+    pass
     
     # Insert Data Into table rooms
-    Rooms.insert_rooms(room2,conn,c)  
+    # Rooms.insert_rooms(room2,conn,c)  
 
     # Delete Data from table rooms
     # Rooms.delete_rooms(room,conn)
@@ -158,8 +160,8 @@ try:
                 """)
  
 except sqlite3.OperationalError :
-
-    Logs.insert_trigger(conn,c)
+    pass
+    # Logs.insert_trigger(conn,c)
   
 
 ##################################################### TABLE ENDS ################################################
@@ -196,19 +198,19 @@ conn.commit()
 
 ##################################################### GET DATA ################################################
 
-Users.getAllUsers(conn,c)
+# Users.getAllUsers(conn,c)
 
 # Users.getStudent(conn)
 
 # Users.getProfessor(conn)
 
-Rooms.getAllRooms(conn,c)
+# Rooms.getAllRooms(conn,c)
 
 # Rooms.getRoom(conn,801,c)
 
-Access_Control.getAllACData(conn,c)
+# Access_Control.getAllACData(conn,c)
 
-Logs.getLogs(conn,c)
+# Logs.getLogs(conn,c)
 
 ##################################################### DISPLAY DATA ################################################
 
