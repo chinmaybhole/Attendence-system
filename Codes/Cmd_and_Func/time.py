@@ -15,6 +15,7 @@ def time_decode(data):
 
 def time_diff(tin,tout):
     if tout - tout :
+        # CREATE A VARIABLE THAT CAN GUESS A REQUIRE TIMEIN AND OUT DIFF
         pass
     pass
 def str2int(tim):
