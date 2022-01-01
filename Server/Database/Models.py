@@ -100,6 +100,7 @@ class Logs:
         self.timein = timein
         self.timeout = timeout
 
+    # for inserting new data into logs
     def insert_trigger(conn,c):
         with conn:
             c.execute("""CREATE TRIGGER IF NOT EXISTS logs_trigger

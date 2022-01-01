@@ -5,7 +5,7 @@ from pprint import pprint
 
 conn = sqlite3.connect('test.sqlite')
 c = conn.cursor()
-c.execute("PRAGMA foreign_keys = ON")
+c.execute("PRAGMA foreign_keys  = ON")
 
 #################################################### TABLE USERS #################################################
 
@@ -54,7 +54,7 @@ try:
     #Create table Room
     c.execute("""CREATE TABLE ROOMS
         (
-            roomno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            roomno INTEGER PRIMARY KEY NOT NULL,
             roomname TEXT NOT NULL
         );
     """)
@@ -96,8 +96,6 @@ except sqlite3.OperationalError :
     ac1 = Access_Control(801,1,None)
     ac2= Access_Control(801,None,1)
     ac3= Access_Control(801,1,1)
-
-
 
 
     # Access_Control.insert_access_control(ac3,conn,c)
