@@ -35,8 +35,8 @@ try:
 except sqlite3.OperationalError :
     # pass
 
-    userS =  Users(2220200309,"Abbas","A","abbas","extc",798465130,1,1,"A")
-    userP =  Users(2220200310,"ABC","Z","abc","extc",1327994561,0)
+    userS =  User(2220200309,"Abbas","A","abbas","extc",798465130,1,1,"A")
+    userP =  User(2220200310,"ABC","Z","abc","extc",1327994561,0)
 
 
     # Insert Data into table user
@@ -121,10 +121,10 @@ try:
             """)
  
 except sqlite3.OperationalError :
-    # pass
+    pass
     # log = Logs(1)
     # Logs.insertDataToLog(conn,c,log)
-    Logs.insert_trigger(conn,c)
+    # Logs.insert_trigger(conn,c)
   
 ##################################################### TABLE ENDS ################################################
 
@@ -132,13 +132,14 @@ conn.commit()
 
 ##################################################### DISPLAY TABLE DETAILS ################################################
 
-Users.getAllUsers(conn,c)
+# User.getAllUsers(conn,c)
+User.getAUser(2220200309)
 
-Rooms.getAllRooms(conn,c)
+# Rooms.getAllRooms(conn,c)
 
-Access_Control.getAllACData(conn,c)
+# Access_Control.getAllACData(conn,c)
 
-Logs.getAllLogs(conn,c)
+# Logs.getAllLogs(conn,c)
 
 ##################################################### DISPLAY TABLE DETAILS ENDS ################################################
 
