@@ -1,10 +1,8 @@
-import datetime
-import json
-from os import access
 from pprint import pprint 
 import sqlite3
+from sqlite3.dbapi2 import Error
 
-conn = sqlite3.connect('Access_Control.sqlite',check_same_thread=False)
+conn = sqlite3.connect('test.sqlite',check_same_thread=False)
 conn.row_factory = sqlite3.Row # This enables column access by name: row['column_name']
 c = conn.cursor()
 c.execute("PRAGMA foreign_keys = ON")
@@ -14,15 +12,15 @@ c.execute("PRAGMA foreign_keys = ON")
 
 class User:
 
-    def __init__(self, userid=None, fname=None, lname=None, passw=None, dept=None, phone=None, isStudent=None,rollno=None, div=None,srno=None):
+    def __init__(self, userid=None, fname=None, lname=None, passw=None, rollno=None, div=None,dept=None, phone=None, isStudent=None,srno=None):
         self.srno = srno
+        self.userid = userid
         self.fname = fname
         self.lname = lname
         self.passw = passw
-        self.userid = userid
-        self.dept = dept
         self.rollno = rollno
         self.div = div
+        self.dept = dept
         self.phone = phone
         self.isStudent = isStudent
 
@@ -35,7 +33,7 @@ class User:
             'dept': self.dept,
             'rollno': self.rollno,
             'div': self.div,
-            'phoneno': self.phone,
+            'phone': self.phone,
         }
         return user_dict
 
@@ -51,48 +49,82 @@ class User:
                     rollno INTEGER,
                     div INTEGER,
                     dept TEXT NOT NULL,
-                    phone TEXT NOT NULL,
+                    phone INTEGER NOT NULL,
                     isStudent INTEGER NOT NULL
                 ); ''')
         conn.commit()
             
     # insert user to table
-    def insert_user(self,user):
+    def insert_user(self):
         #TODOChinmay : To unpack data and plot it to insert command and to return the after process for eg (success, failed)
+        try:
+            c.execute("INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(:userid,:fname,:lname,:passw,:rollno,:div,:dept,:phone,:isStudent)",{'userid': self.userid,'fname': self.fname,'lname': self.lname,'passw':self.passw,'rollno': self.rollno,'div':self.div,'dept':self.dept,'phone': self.phone,'isStudent': self.isStudent})
+            conn.commit()
 
-        c.execute("INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(:userid,:fname,:lname,:passw,:rollno,:div,:dept,:phone,:isStudent)",{'userid': user.userid,'fname': user.fname,'lname': user.lname,'passw':user.passw,'rollno': user.rollno,'div':user.div,'dept':user.dept,'phone': user.phone,'isStudent': user.isStudent})
-        conn.commit()
-        # dictdata = [dict(ix) for ix in sqldata]
-        
+            return f"User {self.userid} added Successfully",200
+        except Error as e :
+            print(str(e))
 
+            return e
 
     # Delete Data of table user
-    def delete_user(user,c):
-        c.execute("DELETE from USERS WHERE userid = :userid",{'userid': user.userid})
-        conn.commit()
+    def delete_user(self):
+        try:
+            c.execute("DELETE from USERS WHERE userid = :userid",{'userid': self.userid})
+            conn.commit()
 
+            return {f"User {self.userid} has been deleted"},200
+        except Error as e:
+            print(str(e))
+
+            return {"message":e},406
 
     # Update Data of table user
-    def update_user(self,user,conn,c):
-        with conn:
-            c.execute(""" UPDATE USERS SET fname = :fname AND lname = :lname AND userid = :userid
-                    WHERE id = :id""",{':userid':user.userid,'id': user.id, 'fname': user.fname, 'lname': user.lname})
+    def update_user(self):
+        try:
+            fields_to_set = []
+            field_values = []
+            # print(self)
+            for attri in vars(self):
+
+                data = getattr(self,attri)
+              
+                if data is not None:
+                    
+                    fields_to_set.append(attri +"= "+ "?")
+                    field_values.append(getattr(self,attri))
+           
+            fields_to_set.pop(0)
+            field_values.pop(0)       
+            set_statement = ", ".join(fields_to_set)
+            print(set_statement)
+            field_values.append(self.userid)
+            print(field_values)
+
+            c.execute(" UPDATE USERS SET "+set_statement+" WHERE userid = ?",field_values)
             conn.commit()
+
+            return f"user {self.userid} has been updated",200
+        except Error as e:
+            print(str(e))
+
+            return {"message":e},406
 
     # get all users
     def getAllUsers(self):
         sqldata = c.execute(" SELECT * FROM USERS")
         dictdata = [dict(ix) for ix in sqldata]
-
         return dictdata
     
     # get a single user
-    def getAUser(self,user):
-        sqldata = c.execute("SELECT id,userid,fname,lname,rollno,div,dept,phone FROM USERS WHERE userid = :userid",{'userid':user})
+    def getAUser(self):
+        sqldata = c.execute("SELECT srno,userid,fname,lname,rollno,div,dept,phone FROM USERS WHERE userid = :userid",{'userid':self.userid})
         dictdata = [dict(ix) for ix in sqldata]
-        # c.execute("SELECT * FROM USERS WHERE userid = ?",(user))
-        # print(c.fetchall())
-        return dictdata
+        if sqldata is None or len(dictdata) == 0:
+            print("No data")
+            return "No User Found",404
+        else:
+            return dictdata,200
 
     # get all students
     def getStudent():
@@ -106,7 +138,7 @@ class User:
         # pprint(c.fetchall())
 
     def __repr__(self):
-        return f"Users('{self.fname}','{self.lname}','{self.userid}','{self.dept}','{self.rollno}','{self.phoneno}','{self.isStudent}')"
+        return f"Users('{self.userid}','{self.fname}','{self.lname}','{self.passw}','{self.rollno}','{self.div}','{self.dept}','{self.phone}','{self.isStudent}')"
 
 #################################################### ROOMS MODEL #################################################
 
@@ -266,9 +298,11 @@ class Logs:
             c.execute(" INSERT INTO LOGS(access_srno) VALUES(:access_srno);",{'access_srno': log.access_srno})
 
     # get all logs
-    def getAllLogs():
-        c.execute("SELECT * FROM LOGS")
-        pprint(c.fetchall())
+    def getAllLogs(self):
+        sqldata = c.execute("SELECT * FROM LOGS")
+        dictdata = [dict(ix) for ix in sqldata]
+        
+        return dictdata
     
 
 

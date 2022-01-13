@@ -1,6 +1,6 @@
 import sqlite3
 import sys
-from Models import *
+# from Models import *
 from pprint import pprint
 
 conn = sqlite3.connect('test.sqlite')
@@ -33,10 +33,10 @@ try:
     ); ''')
 
 except sqlite3.OperationalError :
-    # pass
+    pass
 
-    userS =  User(2220200309,"Abbas","A","abbas","extc",798465130,1,1,"A")
-    userP =  User(2220200310,"ABC","Z","abc","extc",1327994561,0)
+    # userS =  User(2220200309,"Abbas","A","abbas","extc",798465130,1,1,"A")
+    # userP =  User(2220200310,"ABC","Z","abc","extc",1327994561,0)
 
 
     # Insert Data into table user
@@ -63,8 +63,8 @@ try:
 except sqlite3.OperationalError :
     pass
 
-    room1 = Rooms(801,"phy lab")
-    room2 = Rooms(802,"lang lab")
+    # room1 = Rooms(801,"phy lab")
+    # room2 = Rooms(802,"lang lab")
 
     # Rooms.insert_rooms(room2,conn,c)
 
@@ -93,9 +93,9 @@ try:
 except sqlite3.OperationalError :
     pass
 
-    ac1 = Access_Control(801,1,None)
-    ac2= Access_Control(801,None,1)
-    ac3= Access_Control(801,1,1)
+    # ac1 = Access_Control(801,1,None)
+    # ac2= Access_Control(801,None,1)
+    # ac3= Access_Control(801,1,1)
 
 
     # Access_Control.insert_access_control(ac3,conn,c)
@@ -128,12 +128,33 @@ except sqlite3.OperationalError :
   
 ##################################################### TABLE ENDS ################################################
 
+c.execute(""" CREATE TABLE IF NOT EXISTS test (
+        srno INTEGER,
+        name TEXT,
+        last_name TEXT,
+        rollno INTEGER
+    );""")
+
+# c.execute("INSERT INTO test VALUES(3,'jlk','asd',3)")
+response = c.execute("SELECT * FROM test")
+datalist = [dict(ix) for ix in response]
+
+for i in datalist:
+    for j in i:
+        print(j)
+    # print(j)
+# c.execute(f"UPDATE INTO test SET '{data}' ")
+
+
+
+
+
 conn.commit()
 
 ##################################################### DISPLAY TABLE DETAILS ################################################
 
 # User.getAllUsers(conn,c)
-User.getAUser(2220200309)
+# User.getAUser(2220200309)
 
 # Rooms.getAllRooms(conn,c)
 
