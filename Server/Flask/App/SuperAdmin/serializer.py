@@ -7,16 +7,11 @@ user_parser.add_argument('userid', help='Enter Userid for eg 222....', required=
 room_parser = reqparse.RequestParser()
 room_parser.add_argument('roomno', help='Enter roomno for eg 801', required= False)
 
-admin_login_parser = api.parser()
-admin_login_parser.add_argument("userid",location = "headers", help= "Enter your userid", required = "True")
-admin_login_parser.add_argument("passw",location = "headers", help= "Enter your password", required = "True")
+super_admin_login_parser = api.parser()
+super_admin_login_parser.add_argument("userid",location = "headers", help= "Enter your userid", required = "True")
+super_admin_login_parser.add_argument("passw",location = "headers", help= "Enter your password", required = "True")
 
-prof_login_parser = api.parser()
-prof_login_parser.add_argument("userid",location = "headers", help= "Enter your userid", required = "True")
-prof_login_parser.add_argument("passw",location = "headers", help= "Enter your password", required = "True")
-
-
-post_user = api.model(
+super_post_user = api.model(
     "post_user",{
         "userid": fields.Integer(),
         "fname": fields.String(),
@@ -26,7 +21,8 @@ post_user = api.model(
         "div": fields.String(),
         "dept": fields.String(),
         "phone": fields.Integer(),
-        "isStudent": fields.Integer()
+        "isStudent": fields.Integer(),
+        "isAdmin": fields.Integer()
     }
 )
 
@@ -39,7 +35,8 @@ put_user = api.model(
         "rollno" : fields.Integer(),
         "div": fields.String(),
         "dept": fields.String(),
-        "phone": fields.Integer()
+        "phone": fields.Integer(),
+        "isAdmin": fields.Integer()
     }
 )
 

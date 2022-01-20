@@ -21,7 +21,7 @@ def check_userid(value,flag):
         if status ==200: 
             return 200
         else:
-            return _
+            return False
 
     if flag == "delete":
         if status ==200: 
@@ -47,7 +47,7 @@ def check_userid(value,flag):
 
     if flag == "login":
         if status == 200:
-            return True
+            return 200
         else:
             return False
 
@@ -113,5 +113,3 @@ def check_roomno(value,flag):
             return "Room Does Not Exists"
         
                             
-
-    

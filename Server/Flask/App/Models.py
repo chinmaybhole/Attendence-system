@@ -1,4 +1,3 @@
-from pprint import pprint 
 import sqlite3
 from sqlite3.dbapi2 import Error
 
@@ -12,7 +11,7 @@ c.execute("PRAGMA foreign_keys = ON")
 
 class User:
 
-    def __init__(self, userid=None, fname=None, lname=None, passw=None, rollno=None, div=None,dept=None, phone=None, isStudent=None,srno=None):
+    def __init__(self, userid=None, fname=None, lname=None, passw=None, rollno=None, div=None,dept=None, phone=None, isStudent=None, isAdmin=None,srno=None):
         self.srno = srno
         self.userid = userid
         self.fname = fname
@@ -23,6 +22,8 @@ class User:
         self.dept = dept
         self.phone = phone
         self.isStudent = isStudent
+        self.isAdmin = isAdmin
+
 
     # user json model
     def user_to_json(self):
@@ -50,7 +51,8 @@ class User:
                     div INTEGER,
                     dept TEXT NOT NULL,
                     phone INTEGER NOT NULL,
-                    isStudent INTEGER NOT NULL
+                    isStudent INTEGER NOT NULL,
+                    isAdmin INTEGER NOT NULL
                 ); ''')
         conn.commit()
             
@@ -97,9 +99,7 @@ class User:
             fields_to_set.pop(0)
             field_values.pop(0)       
             set_statement = ", ".join(fields_to_set)
-            print(set_statement)
             field_values.append(self.userid)
-            print(field_values)
 
             c.execute(" UPDATE USERS SET "+set_statement+" WHERE userid = ?",field_values)
             conn.commit()
@@ -112,14 +112,26 @@ class User:
 
     # get all users
     def getAllUsers(self):
-        sqldata = c.execute(" SELECT * FROM USERS")
+        # field_value = ""
+        # data =""
+        # print(self.dept)
+        # if self.dept is not None:
+        #     field_value = "WHERE dept = ?"
+        #     data = self.dept
+        sqldata = c.execute(" SELECT * FROM USERS ")
+        # +field_value,data)
         dictdata = [dict(ix) for ix in sqldata]
         return dictdata
     
     # get a single user
-    def getAUser(self):
-        sqldata = c.execute("SELECT srno,userid,fname,lname,rollno,div,dept,phone FROM USERS WHERE userid = :userid",{'userid':self.userid})
+    def getAUser(self,flag=None):
+        sqldata = c.execute("SELECT srno,userid,fname,lname,rollno,passw,div,dept,phone FROM USERS WHERE userid = :userid",{'userid':self.userid})
         dictdata = [dict(ix) for ix in sqldata]
+                
+        if flag == "login":
+            data = dictdata[0]["passw"]
+            return data
+
         if sqldata is None or len(dictdata) == 0:
             print("No data")
             return "No User Found",404
@@ -138,7 +150,7 @@ class User:
         # pprint(c.fetchall())
 
     def __repr__(self):
-        return f"Users('{self.userid}','{self.fname}','{self.lname}','{self.passw}','{self.rollno}','{self.div}','{self.dept}','{self.phone}','{self.isStudent}')"
+        return f"Users('{self.srno}','{self.userid}','{self.fname}','{self.lname}','{self.passw}','{self.rollno}','{self.div}','{self.dept}','{self.phone}','{self.isStudent}','{self.isAdmin}')"
 
 #################################################### ROOMS MODEL #################################################
 
@@ -149,8 +161,8 @@ class Rooms:
         self.roomname = roomname
        
     # create rooms
-    def create_rooms(conn,c):
-        with conn:   
+    def create_rooms():
+           
             c.execute("""CREATE TABLE ROOMS
                         (
                             rid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -165,39 +177,69 @@ class Rooms:
             conn.commit()
 
     # Insert Data Into table rooms
-    def insert_rooms(room,conn,c):
-        with conn:
-            c.execute("INSERT INTO ROOMS(roomno,roomname) VALUES(:roomno,:roomname);",{'roomno': room.roomno,'roomname':room.roomname})
+    def insert_rooms(self):
+        try:
+            c.execute("INSERT INTO ROOMS(roomno,roomname) VALUES(:roomno,:roomname);",{'roomno': self.roomno,'roomname':self.roomname})
             conn.commit()
+
+            return f"Room {self.roomno} is been Added"
+        except Error as e:
+            print(str(e))
+
+            return{"Error":e}
     
     # Delete Data from table rooms
-    def delete_rooms(room,conn,c):
-        with conn:
-            c.execute("DELETE FROM ROOMS WHERE roomno = :roomno",{'roomno': room.roomno})
+    def delete_rooms(self):
+        try:
+            c.execute("DELETE FROM ROOMS WHERE roomno = :roomno",{'roomno': self.roomno})
             conn.commit()
+
+            return {"message":f"Room {self.roomno} is been deleted"}
+        except Error as e:
+            print(str(e))
+
+            return{"Error":e}
 
     # Update Data Into table rooms
-    def update_rooms_no(room,conn,c):
-        with conn:
-            c.execute("UPDATE ROOMS SET roomno = :roomno WHERE roomname = :roomname",{'roomno':room.roomno,'roomname':room.roomname})
+    def update_rooms_no(self):
+        try:
+            c.execute("UPDATE ROOMS SET roomno = :roomno WHERE roomname = :roomname",{'roomno':self.roomno,'roomname':self.roomname})
             conn.commit()
+        except Error as e:
+            print(str(e))
 
+            return{"Error":e}
 
     # get all rooms
     def getAllRooms(self):
-        sqldata = c.execute("SELECT * FROM ROOMS")
-        dictdata = [dict(ix) for ix in sqldata]
+        try:
+            sqldata = c.execute("SELECT * FROM ROOMS")
+            dictdata = [dict(ix) for ix in sqldata]
 
-        return dictdata
+            return dictdata
+        except Error as e:
+            print(str(e))
+
+            return{"Error":e}
 
     # get one room
-    def getRoom(conn,room,c):
-        with conn:
-            c.execute(" SELECT * FROM ROOMS WHERE roomno = :roomno", {'roomno':room})
-            pprint(c.fetchall())
+    def getRoom(self):
+        try:
+            sqldata = c.execute(" SELECT * FROM ROOMS WHERE roomno = :roomno", {'roomno':self.roomno})
+            dictdata = [dict(ix) for ix in sqldata]
+
+            if sqldata is None or len(dictdata) == 0:
+                print("No data")
+                return "No Room Found",404
+            else:
+                return dictdata,200
+        except Error as e:
+            print(str(e))
+
+            return{"Error": e}
 
     def __repr__(self):
-        return f"Room('{self.id}','{self.roomno}','{self.uid}')"
+        return f"Room('{self.roomno}','{self.roomname}')"
 
 #################################################### ACCESS-CONTROL MODEL #################################################
 
@@ -307,6 +349,30 @@ class Logs:
 
 
     def __repr__(self):
-        return f"Logs('{self.userid}','{self.roomid}','{self.timein}','{self.timeout}')"
+        return f"Logs('{self.srno}','{self.access_srno}','{self.timein}','{self.timeout}')"
 
+def download_logs_data():
+    try:
+        sqldata = c.execute("""
+            SELECT 
+            LOGS.srno [Srno],
+            LOGS.timein [Timein],
+            LOGS.timeout [Timeout],
+            LOGS.access_srno [Access Id],
+            USERS.fname [Name],
+            ROOMS.roomno [Roomno]
+            FROM LOGS
+            LEFT JOIN ACCESS_CONTROL ON LOGS.access_srno = ACCESS_CONTROL.srno
+            LEFT JOIN USERS ON USERS.fname = (SELECT fname FROM USERS WHERE CASE WHEN ACCESS_CONTROL.userid IS NOT NULL THEN ACCESS_CONTROL.userid = USERS.srno ELSE ACCESS_CONTROL.profid = USERS.srno END)
+            LEFT JOIN ROOMS ON ROOMS.roomno = (SELECT roomno FROM ROOMS WHERE ACCESS_CONTROL.rid = ROOMS.roomno)
+            """)
+        
+        dictdata = [dict(ix) for ix in sqldata]
+
+        return dictdata
+
+    except Error as e:
+        print(str(e))
+
+        return {"Error": e}
 #############################################################################################################################

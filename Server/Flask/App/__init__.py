@@ -1,43 +1,69 @@
-from enum import unique
-import sqlite3
-# from logging import NullHandler, setLogRecordFactory
-from flask import Flask, Blueprint, blueprints
+from flask import Flask, Blueprint, request, blueprints
 from flask_restx import Api
-from flask_swagger_ui import get_swaggerui_blueprint
-# from App.Admin.routes import routes
+from functools import wraps
+from App import Models
+from config import Config ,ACCESS_EXPIRES, REFRESH_EXPIRES
+import jwt
 
-
-
-# app = Flask(__name__) # name of the flask application
 blueprint = Blueprint('Access_Control',__name__,url_prefix='/access')
 api = Api(blueprint)
 
-def create_app():
+def create_app(config_class = Config):
     app = Flask(__name__)
+
+    app.config.from_object(Config)
      
     main = Blueprint('main', __name__)
 
     @main.route('/')
     def index():
         return """<h1>Access Application (SERVER)</h1>
-        <h3>/access: swagger UI <br>"""  
+        <h3>/access: swagger UI <br>"""
 
-    SWAGGER_URL = '/swagger'
-    API_URL = '/static/swagger.json'
-    SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={
-            'app_name': "Seans-Python-Flask-REST-Boilerplate"
-        }
-    )
+    def create_access_token(uid):
 
-    app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
+        access_token = jwt.encode({
+            "user": uid,
+            "exp": ACCESS_EXPIRES
+        },app.config["SECRET_KEY"],algorithms=["HS256"])
+
+        return access_token
+
+    def create_refresh_token(uid):
+
+        refresh_token = jwt.encode({
+            "user": uid,
+            "exp": REFRESH_EXPIRES
+        },app.config["SECRET_KEY"],algorithms=["HS256"])
+
+        return refresh_token
+
+    def token_required(f):
+        @wraps(f)
+        def decorator(*args, **kwargs):
+            token = None
+            if 'x-access-tokens' in request.headers:
+                token = request.headers['x-access-tokens']
+        
+            if not token:
+                return {'message': 'a valid token is missing'}
+            try:
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+                current_user = Models.User(userid=data['user'])
+            except:
+                return {'message': 'token is invalid'}
+        
+            return f(data, *args, **kwargs)
+        return decorator
+
+
 
     from App.Admin.routes import namespace as Admin
+    from App.SuperAdmin.routes import namespace as SuperAdmin
     api.add_namespace(Admin)
+    api.add_namespace(SuperAdmin)
     # app.register_blueprint(routes)
     app.register_blueprint(blueprint)   
     app.register_blueprint(main) 
 
-    return app    
+    return app

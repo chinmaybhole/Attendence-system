@@ -2,26 +2,22 @@ from sqlite3.dbapi2 import Error
 from flask import Blueprint,request,send_file
 from App import Models, api
 from flask_restx import Resource,reqparse,Namespace
-from App.Admin.seralizer import *
-from App.Admin.helper import *
+from App.SuperAdmin.serializer import *
+from App.SuperAdmin.helper import *
 from passw import hash_passwd
 import pandas as pd
 from io import BytesIO
 
-users = Models.User()
-rooms = Models.Rooms()
-ac = Models.Access_Control()
-logs = Models.Logs()
 
-namespace = Namespace('Admin', description= "All About Admin API's")
+namespace = Namespace('SuperAdmin', description= "All About SuperAdmin API's")
 
-class AdminLogin(Resource):
+class SuperAdminLogin(Resource):
     @api.response(200, "Successful")
     @api.doc(responses=auth_failures)
-    @api.expect(admin_login_parser)
+    @api.expect(super_admin_login_parser)
     def post(self):
         try:
-            body = admin_login_parser.parse_args()
+            body = super_admin_login_parser.parse_args()
             h_passw = hash_passwd(body["passw"])
             uid_response = check_userid(body["userid"],"login")
             pass_response = check_passw(body["userid"],h_passw,"login")
@@ -75,10 +71,10 @@ class User(Resource):
                 else:
                     return{"Warning": check},404
             else:
-                u=users.getAllUsers()
-                a= ac.getAllACData()
-                r= rooms.getAllRooms()
-                l = logs.getAllLogs()
+                u= Models.User().getAllUsers()
+                a= Models.Access_Control().getAllACData()
+                r= Models.Rooms().getAllRooms()
+                l = Models.Logs().getAllLogs()
                 return {'User':u,"Access_Control":a,"Rooms":r,"Logs":l},200
             
         except Exception as e:
@@ -94,7 +90,7 @@ class User(Resource):
 	    403 : "Token is Expired",
         500 : "Internal Server Error"
     })   
-    @api.expect(post_user)
+    @api.expect(super_post_user)
     def post(self):
         try:
             
@@ -106,7 +102,7 @@ class User(Resource):
                 if body["rollno"] == 0 and body["div"] == "None":
                     rollno = None
                     div = None
-                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,rollno,div,body["dept"],body["phone"],body["isStudent"])
+                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,rollno,div,body["dept"],body["phone"],body["isStudent"],body["isAdmin"])
                     response = user.insert_user()
 
                     return {
@@ -114,7 +110,7 @@ class User(Resource):
                     }    
 
                 else:
-                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,body["rollno"],body["div"],body["dept"],body["phone"],body["isStudent"])
+                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,body["rollno"],body["div"],body["dept"],body["phone"],body["isStudent"],body["isAdmin"])
                     response = user.insert_user()
 
                     return {
@@ -123,7 +119,6 @@ class User(Resource):
             else:
                 return userid
 
-            # return f"Added Student {userid} Successfully"
         except Exception as e:
             print(str(e)), 500
 
@@ -149,7 +144,7 @@ class User(Resource):
                     datalist = make_a_list(index,data)
                     # print(datalist)
 
-                    user = Models.User(datalist[1],datalist[2],datalist[3],datalist[4],datalist[5],datalist[6],datalist[7],datalist[8])
+                    user = Models.User(datalist[1],datalist[2],datalist[3],datalist[4],datalist[5],datalist[6],datalist[7],datalist[8],None,datalist[10])
                     response = user.update_user()
 
                     print(response)
@@ -220,7 +215,7 @@ class Rooms(Resource):
             else:
                 return{"message": check},404
         else:
-            r = rooms.getAllRooms()
+            r = Models.Rooms().getAllRooms()
 
             return{"Rooms": r}
 
@@ -307,11 +302,9 @@ class Download(Resource):
 
             return{"error":e}     
 
-
 namespace.add_resource(User,'/dashboard')
 namespace.add_resource(Rooms,'/rooms')
 namespace.add_resource(Download,'/download')
-namespace.add_resource(AdminLogin,'/login')
-
+namespace.add_resource(SuperAdminLogin,'/login')
 
 

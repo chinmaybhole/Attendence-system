@@ -1,11 +1,13 @@
 flask
 flask-blueprint
-mysql-connector-python
-restapi-client
+# mysql-connector-python
+# restapi-client
 flask-restx
 Flask-CLI
 click
 sqlite3
 tk
 pyserial
-flask_swagger_ui
+PyJWT
+pandas
+xlsxwriter
