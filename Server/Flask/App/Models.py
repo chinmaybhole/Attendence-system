@@ -111,16 +111,21 @@ class User:
             return {"message":e},406
 
     # get all users
-    def getAllUsers(self):
-        # field_value = ""
-        # data =""
-        # print(self.dept)
-        # if self.dept is not None:
-        #     field_value = "WHERE dept = ?"
-        #     data = self.dept
-        sqldata = c.execute(" SELECT * FROM USERS ")
+    def getAllUsers(self,role=None):
+        field_value = ""
+
+        if role == "Admin":
+            values = ["srno","userid","fname","lname","passw","rollno","div","dept","phone","isStudent"]
+            
+        else:
+            values = "*"    
+
+        field_value = ",".join(values)    
+        print(field_value)
+        sqldata = c.execute(" SELECT "+field_value+" FROM USERS ")
         # +field_value,data)
         dictdata = [dict(ix) for ix in sqldata]
+
         return dictdata
     
     # get a single user

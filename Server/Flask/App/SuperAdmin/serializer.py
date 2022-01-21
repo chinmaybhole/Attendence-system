@@ -26,7 +26,7 @@ super_post_user = api.model(
     }
 )
 
-put_user = api.model(
+super_put_user = api.model(
     "put_user",{
         "userid": fields.Integer(),
         "fname": fields.String(),
@@ -40,20 +40,20 @@ put_user = api.model(
     }
 )
 
-delete_user = api.model(
+super_delete_user = api.model(
     "delete_user",{
         "userid": fields.Integer()
     }
 )
 
-post_room = api.model(
+super_post_room = api.model(
     "post_room",{
         "roomno": fields.Integer(),
         "roomname": fields.String()
     }
 )
 
-delete_room = api.model(
+super_delete_room = api.model(
     "delete_room",{
         "roomno": fields.Integer()
     }

@@ -1,17 +1,12 @@
 from sqlite3.dbapi2 import Error
-from flask import Blueprint,request,send_file
+from flask import request,send_file
 from App import Models, api
-from flask_restx import Resource,reqparse,Namespace
+from flask_restx import Resource,Namespace
 from App.Admin.seralizer import *
 from App.Admin.helper import *
 from passw import hash_passwd
 import pandas as pd
 from io import BytesIO
-
-users = Models.User()
-rooms = Models.Rooms()
-ac = Models.Access_Control()
-logs = Models.Logs()
 
 namespace = Namespace('Admin', description= "All About Admin API's")
 
@@ -75,11 +70,10 @@ class User(Resource):
                 else:
                     return{"Warning": check},404
             else:
-                u=users.getAllUsers()
-                a= ac.getAllACData()
-                r= rooms.getAllRooms()
-                l = logs.getAllLogs()
-                return {'User':u,"Access_Control":a,"Rooms":r,"Logs":l},200
+                u= Models.User().getAllUsers("Admin")
+                a= Models.Access_Control().getAllACData()
+                r= Models.Rooms().getAllRooms()
+                return {'User':u,"Access_Control":a,"Rooms":r},200
             
         except Exception as e:
             print(str(e))
@@ -102,7 +96,9 @@ class User(Resource):
             userid = check_userid(body["userid"])
             phoneno = check_phoneno(body["phone"])
             h_passw = hash_passwd(body["passw"])  # hashing the password
-            if userid == True and phoneno == True:
+            dept = check_dept(body["dept"])
+            print(dept)
+            if userid == True and phoneno == True and dept == True:
                 if body["rollno"] == 0 and body["div"] == "None":
                     rollno = None
                     div = None
@@ -307,11 +303,7 @@ class Download(Resource):
 
             return{"error":e}     
 
-
 namespace.add_resource(User,'/dashboard')
 namespace.add_resource(Rooms,'/rooms')
 namespace.add_resource(Download,'/download')
 namespace.add_resource(AdminLogin,'/login')
-
-
-

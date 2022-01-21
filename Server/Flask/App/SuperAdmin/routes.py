@@ -1,7 +1,7 @@
 from sqlite3.dbapi2 import Error
-from flask import Blueprint,request,send_file
+from flask import request,send_file
 from App import Models, api
-from flask_restx import Resource,reqparse,Namespace
+from flask_restx import Resource,Namespace
 from App.SuperAdmin.serializer import *
 from App.SuperAdmin.helper import *
 from passw import hash_passwd
@@ -74,8 +74,7 @@ class User(Resource):
                 u= Models.User().getAllUsers()
                 a= Models.Access_Control().getAllACData()
                 r= Models.Rooms().getAllRooms()
-                l = Models.Logs().getAllLogs()
-                return {'User':u,"Access_Control":a,"Rooms":r,"Logs":l},200
+                return {'User':u,"Access_Control":a,"Rooms":r},200
             
         except Exception as e:
             print(str(e))
@@ -132,7 +131,7 @@ class User(Resource):
 	    403 : "Token is Expired",
         500 : "Internal Server Error"
     })   
-    @api.expect(put_user)
+    @api.expect(super_put_user)
     def put(self):
         try:
             body = request.get_json()
@@ -173,7 +172,7 @@ class User(Resource):
 	    403 : "Token is Expired",
         500 : "Internal Server Error"
     })   
-    @api.expect(delete_user)
+    @api.expect(super_delete_user)
     def delete(self):
         try:
             body = request.get_json()
@@ -227,7 +226,7 @@ class Rooms(Resource):
 	    403 : "Token is Expired",
         500 : "Internal Server Error"
     })   
-    @api.expect(post_room)
+    @api.expect(super_post_room)
     def post(self):
         body = request.get_json()
 
@@ -251,7 +250,7 @@ class Rooms(Resource):
 	    403 : "Token is Expired",
         500 : "Internal Server Error"
     })   
-    @api.expect(delete_room)
+    @api.expect(super_delete_room)
     def delete(self):
         body = request.get_json()
 

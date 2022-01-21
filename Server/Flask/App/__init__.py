@@ -60,8 +60,11 @@ def create_app(config_class = Config):
 
     from App.Admin.routes import namespace as Admin
     from App.SuperAdmin.routes import namespace as SuperAdmin
+    from App.Professor.routes import namespace as Professor
     api.add_namespace(Admin)
     api.add_namespace(SuperAdmin)
+    api.add_namespace(Professor)
+
     # app.register_blueprint(routes)
     app.register_blueprint(blueprint)   
     app.register_blueprint(main) 

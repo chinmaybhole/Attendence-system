@@ -11,11 +11,6 @@ admin_login_parser = api.parser()
 admin_login_parser.add_argument("userid",location = "headers", help= "Enter your userid", required = "True")
 admin_login_parser.add_argument("passw",location = "headers", help= "Enter your password", required = "True")
 
-prof_login_parser = api.parser()
-prof_login_parser.add_argument("userid",location = "headers", help= "Enter your userid", required = "True")
-prof_login_parser.add_argument("passw",location = "headers", help= "Enter your password", required = "True")
-
-
 post_user = api.model(
     "post_user",{
         "userid": fields.Integer(),
