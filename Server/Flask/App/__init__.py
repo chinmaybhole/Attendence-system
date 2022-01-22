@@ -61,6 +61,8 @@ def create_app(config_class = Config):
     from App.Admin.routes import namespace as Admin
     from App.SuperAdmin.routes import namespace as SuperAdmin
     from App.Professor.routes import namespace as Professor
+    from App.Access_Control.routes import namespace as Access
+    api.add_namespace(Access)
     api.add_namespace(Admin)
     api.add_namespace(SuperAdmin)
     api.add_namespace(Professor)

@@ -24,26 +24,12 @@ class User:
         self.isStudent = isStudent
         self.isAdmin = isAdmin
 
-
-    # user json model
-    def user_to_json(self):
-        user_dict = {
-            'userid': str(self.userid),
-            'fname': self.fname,
-            'lname':self.lname,
-            'dept': self.dept,
-            'rollno': self.rollno,
-            'div': self.div,
-            'phone': self.phone,
-        }
-        return user_dict
-
     # create user table
     def create_user():
         c.execute('''CREATE TABLE USERS
                 (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    userid INTEGER NOT NULL,
+                    srno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    userid INTEGER,
                     fname TEXT NOT NULL,
                     lname TEXT NOT NULL,
                     passw TEXT NOT NULL,
@@ -123,7 +109,6 @@ class User:
         field_value = ",".join(values)    
         print(field_value)
         sqldata = c.execute(" SELECT "+field_value+" FROM USERS ")
-        # +field_value,data)
         dictdata = [dict(ix) for ix in sqldata]
 
         return dictdata
@@ -173,10 +158,6 @@ class Rooms:
                             rid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                             roomno INTEGER NOT NULL, 
                             roomname TEXT NOT NULL,
-                            uid INTEGER NOT NULL,
-                            profid INTEGER NOT NULL,
-                            FOREIGN KEY(uid) 
-                            REFERENCES USERS(id)
                         );
                     """)
             conn.commit()
@@ -250,27 +231,26 @@ class Rooms:
 
 class Access_Control:
 
-    def __init__(self,roomno=None,userid=None,profid=None,srno=None):
+    def __init__(self,rid=None,userid=None,profid=None,srno=None):
         self.srno = srno
         self.userid = userid
-        self.roomno = roomno
+        self.rid = rid
         self.profid = profid
 
     # create access_control
-    def create_access_control(conn,c):
-        with conn:
-            c.execute("""CREATE TABLE ACCESS_CONTROL
-                        (
-                            srno INTEGER PRIMARY KEY AUTOINCREMENT,
-                            timein TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            timeout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            userid INTEGER NOT NULL,
-                            rid INTEGER NOT NULL,
-                            FOREIGN KEY(userid) REFERENCES USERS(id),
-                            FOREIGN KEY(rid) REFERENCES ROOMS(rid)
-                        );
-                    """)
-            conn.commit()
+    def create_access_control(self):
+        c.execute("""CREATE TABLE ACCESS_CONTROL
+                    (
+                        srno INTEGER PRIMARY KEY AUTOINCREMENT,
+                        userid INTEGER,
+                        rid INTEGER NOT NULL,
+                        profid INTEGER,
+                        FOREIGN KEY(userid) REFERENCES USERS(srno),
+                        FOREIGN KEY(profid) REFERENCES USERS(srno),
+                        FOREIGN KEY(rid) REFERENCES ROOMS(roomno)
+                    );
+                """)
+        conn.commit()
 
     # def access_cont(conn,c):
     #     with conn:
@@ -286,10 +266,33 @@ class Access_Control:
     #             conn.commit()
     #     return None
     #insert data to table access_system
-    def insert_access_control(ac,conn,c):
-        with conn: 
-            c.execute("INSERT INTO ACCESS_CONTROL(userid,profid,rid) VALUES(:userid,:profid,:rid)",{'userid':ac.userid,'profid':ac.profid,'rid':ac.roomno})
+    def insert_access_control(self):
+        try:
+            fields_to_set = []
+            values_to_set = []
+            field_values = []
+
+            for attri in vars(self):
+                data = getattr(self,attri)
+                if data is not None:
+                    print(attri,data)
+                    fields_to_set.append(attri)
+                    values_to_set.append(attri+"= "+ "?")
+                    field_values.append(getattr(self,attri))
+                
+            set_statement = ", ".join(fields_to_set)
+            set_values= ",".join(values_to_set)
+            
+            print(field_values,fields_to_set,values_to_set)
+
+            c.execute("INSERT INTO ACCESS_CONTROL("+set_statement+") VALUES("+set_values+")",field_values)
             conn.commit()
+
+            return f"Data of {self.userid} is Added"
+
+        except Error as e:
+            print(str(e))
+            return e
             # c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout)",{'userid':ac.userid,'roomid':ac.roomid,'timein': ac.timein,'timeout': ac.timeout})
 
 
@@ -316,28 +319,45 @@ class Logs:
         self.timeout = timeout
 
     # create logs table
-    def create_logs(conn,c):
-        with conn:
-            c.executescript("""CREATE TABLE LOGS AS 
-                SELECT USERS.userid AS 'LOGS_uid',
-                ROOMS.roomno AS 'LOGS_roomno',
-                ACCESS_CONTROL.timein AS 'LOGS_timein',
-                ACCESS_CONTROL.timeout AS 'LOGS_timeout'
-                FROM USERS,ROOMS,ACCESS_CONTROL
-                WHERE USERS.id = ROOMS.uid
-                AND ACCESS_CONTROL.timein AND ACCESS_CONTROL.timeout IS NOT NULL;
-                """)
+    def create_logs(self):
+            c.execute("""CREATE TABLE LOGS (
+                        srno INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        timein REAL,
+                        timeout REAL,
+                        access_srno INTEGER NOT NULL,
+                        FOREIGN KEY(access_srno) REFERENCES ACCESS_CONTROL(srno)                            
+                    );""")
+            
+            conn.commit()
+
+            # ("""CREATE TABLE LOGS (
+            #             "srno"	INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            #             "timein"	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            #             "timeout"	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            #             "access_srno"	INTEGER NOT NULL,
+            #             FOREIGN KEY("access_srno") REFERENCES "ACCESS_CONTROL"("srno")                            
+            #         );""")
+
+            # ("""CREATE TABLE LOGS AS 
+            #     SELECT USERS.userid AS 'LOGS_uid',
+            #     ROOMS.roomno AS 'LOGS_roomno',
+            #     ACCESS_CONTROL.timein AS 'LOGS_timein',
+            #     ACCESS_CONTROL.timeout AS 'LOGS_timeout'
+            #     FROM USERS,ROOMS,ACCESS_CONTROL
+            #     WHERE USERS.id = ROOMS.uid
+            #     AND ACCESS_CONTROL.timein AND ACCESS_CONTROL.timeout IS NOT NULL;
+            #     """)
 
     # for inserting new data into logs
-    def insert_trigger(conn,c):
-        with conn:
+    def insert_trigger(self):
             c.execute("""CREATE TRIGGER IF NOT EXISTS logs_trigger
                         AFTER INSERT ON ACCESS_CONTROL
                         WHEN new.rid AND new.profid OR new.rid AND new.userid IS NOT NULL
                         BEGIN
-                            INSERT INTO LOGS(access_srno) VALUES(new.srno);
+                            INSERT INTO LOGS(access_srno,timein,timeout) VALUES(new.srno,julianday(new.timein),julianday(new.timeout));
                         END;
                     """)
+            conn.commit()
 
     # insert data to logs
     def insertDataToLog(conn,c,log):

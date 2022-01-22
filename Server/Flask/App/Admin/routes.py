@@ -216,7 +216,7 @@ class Rooms(Resource):
             else:
                 return{"message": check},404
         else:
-            r = rooms.getAllRooms()
+            r = Models.Rooms().getAllRooms()
 
             return{"Rooms": r}
 
