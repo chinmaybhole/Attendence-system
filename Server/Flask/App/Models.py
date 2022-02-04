@@ -1,5 +1,6 @@
 import sqlite3
 from sqlite3.dbapi2 import Error
+from traceback import print_tb
 
 conn = sqlite3.connect('test.sqlite',check_same_thread=False)
 conn.row_factory = sqlite3.Row # This enables column access by name: row['column_name']
@@ -122,8 +123,15 @@ class User:
             data = dictdata[0]["passw"]
             return data
 
+        if flag == "role":
+            sqldata = c.execute("SELECT isStudent FROM USERS WHERE userid = :userid",{'userid':self.userid})
+            dictdata = [dict(ix) for ix in sqldata]  
+            data = dictdata[0]["isStudent"]
+
+            return data
+
         if sqldata is None or len(dictdata) == 0:
-            print("No data")
+            print("No User data")
             return "No User Found",404
         else:
             return dictdata,200
@@ -215,7 +223,7 @@ class Rooms:
             dictdata = [dict(ix) for ix in sqldata]
 
             if sqldata is None or len(dictdata) == 0:
-                print("No data")
+                print("No Room data")
                 return "No Room Found",404
             else:
                 return dictdata,200
@@ -295,17 +303,42 @@ class Access_Control:
             return e
             # c.execute("INSERT INTO ACCESS_CONTROL(userid,roomid,timein,timeout) VALUES(:userid,:roomid,:timein,:timeout)",{'userid':ac.userid,'roomid':ac.roomid,'timein': ac.timein,'timeout': ac.timeout})
 
+    def getAACData(self,paramflag):
+        try:
+            if paramflag == "rid":
+                sqlrmdata = c.execute("SELECT rid FROM ACCESS_CONTROL WHERE "+paramflag+"= :rid",{"rid":self.rid})
+                rmdatadict = [dict(ix) for ix in sqlrmdata]
+
+                if sqlrmdata is None or len(rmdatadict) == 0:
+                    print("No Access Room data")
+                    return "No Rooms Found",404
+                else:
+                    return rmdatadict,200
+
+            else:
+                sqldata = c.execute("SELECT * FROM ACCESS_CONTROL WHERE "+paramflag+"= (SELECT srno FROM USERS WHERE userid = :srno)",{"srno":self.userid})
+                datadict = [dict(ix) for ix in sqldata]
+
+                if sqldata is None or len(datadict) == 0:
+                    print("No Access Control data")
+                    return "No User Found",404
+                else:
+                    return datadict,200
+
+        except Error as e :
+            print(str(e))
+            return e
 
     # display all data
     def getAllACData(self):
-        sqldata =c.execute("SELECT * FROM ACCESS_CONTROL")
+        sqldata = c.execute("SELECT * FROM ACCESS_CONTROL")
         dictdata = [dict(ix) for ix in sqldata]
 
         return dictdata
 
     # update the timeout if timein exists 
-    def update_access_data(data,conn,c):
-        with conn:
+    def update_access_data(self):
+        
             c.execute("UPDATE ACCESS_CONTROL SET old.timeout= new.timeout WHERE timein")
 
 #################################################### LOGS MODEL #################################################
@@ -354,7 +387,7 @@ class Logs:
                         AFTER INSERT ON ACCESS_CONTROL
                         WHEN new.rid AND new.profid OR new.rid AND new.userid IS NOT NULL
                         BEGIN
-                            INSERT INTO LOGS(access_srno,timein,timeout) VALUES(new.srno,julianday(new.timein),julianday(new.timeout));
+                            INSERT INTO LOGS(access_srno,timein,timeout) VALUES(new.srno,new.timein,new.timeout);
                         END;
                     """)
             conn.commit()
@@ -371,7 +404,20 @@ class Logs:
         
         return dictdata
     
+    def getALog(self,paramflag,userid):
+        try:
+            if paramflag == "timein":
 
+                sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = (SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = :userid))",{"userid":userid})
+                dictdata = [dict(ix) for ix in sqldata]
+                data = dictdata[0]["timein"]
+
+                return data
+
+        except Error as e:
+            print(str(e))
+
+            return e
 
     def __repr__(self):
         return f"Logs('{self.srno}','{self.access_srno}','{self.timein}','{self.timeout}')"

@@ -2,7 +2,6 @@ from decode import decode
 import serial
 import time
 
-
 ser = serial.Serial('COM6',9600)
 data = ser.readline()
 stri= data.decode("utf-8")
