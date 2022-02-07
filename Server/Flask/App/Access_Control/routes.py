@@ -29,7 +29,7 @@ class Access_control(Resource):
                     check = check_userid(body["userid"],"post")
                     if check == True:
                         ac = Models.Access_Control(body["rid"],body["userid"],profid)
-                        log = Models.Logs(timein=body["timein"],timeout=body["timeout"])
+                        log = Models.Logs(timein=body["timein"])
                         acdata = ac.insert_access_control()
                     else:
                         return {"Warning":"profid Not Found"}
@@ -50,44 +50,153 @@ class Access_control(Resource):
                     checkSecret = check_secrets(body["secrets"])
                     if checkSecret == "valid":
                         if body["rid"] is not None:
-                            checkrommno = check_access_roomno(body["rid"],"put","rid")
-                            if checkrommno == 200:
-                                check = check_userid(body["userid"],"put")
-                                role = check_role(body["userid"])
-                                if check == True and role == 0: #Professor
-                                    userid = None
-                                    userid_exists = check_update_user(body["userid"],"profid")
-                                    if userid_exists == 200:
-                                        checkTime = check_time(body["timein"],body["timeout"],body["userid"])
-                                        if checkTime == "New":
-                                            ac = Models.Access_Control(body["rid"],userid,body["userid"])
-                                            log = Models.Logs(timein=body["timein"],timeout=body["timeout"])
-                                            # acdata = ac.insert_access_control()
-                                        elif checkTime == "":
-                                            pass
+                            checkroom = check_roomno(body["rid"],"get")
+                            if checkroom == 200:
+                                checkaccessrommno = check_access_roomno(body["rid"],"put","rid")
+                                userid_exists = check_update_user(body["userid"],"userid")
+                                profid_exists = check_update_user(body["userid"],"profid")
+
+                                print(checkaccessrommno,userid_exists,profid_exists)
+
+                                if checkaccessrommno == 200 and (userid_exists == 200 or profid_exists == 200):
+                                    check = check_userid(body["userid"],"put")
+                                    role = check_role(body["userid"])
+                                    if check == True and role == 0: #Professor
+                                        userid = None
+                                        if profid_exists == 200:
+                                            if body["timein"] != "" and body["timeout"] != "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+
+                                            elif body["timein"] == "" and body["timeout"] == "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
+                                                
+                                            else:
+                                                checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
+                                            
+                                                if checkTime == "replace": # to replace the current data with old
+                                                    if body["timein"] != "":
+                                                        pass
+                                                        log = Models.Logs(timein=body["timein"])
+                                                        logdata,status = log.update_log(body["userid"],role)
+
+                                                        return {"message":logdata},status
+
+                                                    elif body["timeout"] != "":
+                                                        log = Models.Logs(timeout=body["timeout"])
+                                                        logdata,status = log.update_log(body["userid"],role)
+
+                                                        return {"message":logdata},status
+
+                                                elif checkTime == "dump": # to dump the current data
+
+                                                    return {"message":"Data Dumped due to Non Matching Properties"},200
+
+                                        else:
+                                            return {"Error":"Profid Not Found"},404
+                                    elif check == True and role == 1: #Student
+                                        profid = None 
+                                        
+                                        if userid_exists == 200:
+                                            if body["timein"] != "" and body["timeout"] != "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+
+                                            elif body["timein"] == "" and body["timeout"] == "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
+                                                
+                                            else:
+                                                checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
+                            
+                                                if checkTime == "replace": # to replace the current data with old
+                                                    if body["timein"] != "":
+                                                        pass
+                                                        log = Models.Logs(timein=body["timein"])
+                                                        logdata,status = log.update_log(body["userid"],role)
+
+                                                        return {"message":logdata},status
+        
+                                                    elif body["timeout"] != "":
+                                                        log = Models.Logs(timeout=body["timeout"])
+                                                        logdata,status = log.update_log(body["userid"])
+
+                                                        add_duration(body["userid"],status,body["timeout"],role)
+
+                                                        return {"message":logdata},status
+
+                                                elif checkTime == "dump": # to dump the current data
+
+                                                    return {"message":"Data Dumped due to Non Matching Properties"},200
+
+                                        else:
+                                            return {"Error":"Userid Not Found"},404
+                                    elif check == False:
+                                        return {"Error":"Invalid Userid"},404
                                     else:
-                                        return {"Error":"Profid Not Found"},404
-                                elif check == True and role == 1: #Student
-                                    profid = None 
-                                    userid_exists = check_update_user(body["userid"],"userid")
-                                    print(userid_exists)
-                                    if userid_exists == 200:
-                                        checkTime = check_time(body["timein"],body["timeout"],body["userid"])
-                                        print(checkTime)
-                                        if checkTime == "New":
-                                            ac = Models.Access_Control(body["rid"],body["userid"],profid)
-                                            log = Models.Logs(timein=body["timein"],timeout=body["timeout"])
-                                            # acdata = ac.insert_access_control()
-                                        elif checkTime == "":
-                                            pass
-                                    else:
-                                        return {"Error":"Userid Not Found"},404
-                                elif check == False:
-                                    return {"Error":"Invalid Userid"},404
+                                        return{"Error":"userid Cannot be Null"},406    
                                 else:
-                                    return{"Error":"userid Cannot be Null"},406    
+                                    check = check_userid(body["userid"],"put")
+                                    role = check_role(body["userid"])
+                                    if check == True and role == 0: # Professor
+                                        if body["timein"] != "" and body["timeout"] != "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+
+                                        elif body["timein"] == "" and body["timeout"] == "":
+
+                                            return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
+                                            
+                                        else:
+                                            userid = None
+                                            checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
+                                            print("checktime: ",checkTime)
+                                            if checkTime == "New": # new data to insert
+                                                getuser = Models.User(userid=body["userid"])
+                                                user = getuser.getAUser("insertaccess")
+                                                ac = Models.Access_Control(body["rid"],userid,getuser)
+                                                acdata,status = ac.insert_access_control()
+
+                                                if status == 200:
+                                                    getac = Models.Access_Control().getAllACData("insertlog")
+
+                                                    log = Models.Logs(access_srno=getac,timein=body["timein"])
+                                                    logdata = log.insertDataToLog()
+
+                                                return {"message": acdata},status
+
+                                    elif check == True and role == 1: #Student
+                                        if body["timein"] != "" and body["timeout"] != "":
+
+                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+
+                                        elif body["timein"] == "" and body["timeout"] == "":
+
+                                            return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
+                                            
+                                        else:
+                                            profid = None
+
+                                            checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
+                                            print("checktime: ",checkTime)
+                                            if checkTime == "New": # new data to insert
+                                                print(body["userid"])
+                                                getuser = Models.User(userid=body["userid"]).getAUser("insertaccess")
+                                                ac = Models.Access_Control(body["rid"],getuser,profid)
+                                                acdata = ac.insert_access_control()
+
+                                                if acdata == 200:
+                                                    getac = Models.Access_Control().getAllACData("insertlog")
+
+                                                    log = Models.Logs(access_srno=getac,timein=body["timein"])
+                                                    logdata = log.insertDataToLog()
+
+                                                return {"message": acdata}
+                                    else:
+                                        return {"message":"User Role Not Found"},404
                             else:
-                                return {"Error": checkrommno},404
+                                return {"Error": "Room Entered Does Not Exits"},404
                         else:
                             return {"Error": "Room Id Cannot be Empty"},406
                     else:

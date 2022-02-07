@@ -69,7 +69,6 @@ def check_update_user(value,flag):
 
     user = Models.Access_Control(userid=value)
     _,status = user.getAACData(flag)
-    print(status)
 
     if flag == "userid":
         if status == 200:
@@ -83,55 +82,81 @@ def check_update_user(value,flag):
         else:
             return False
     
-def check_access_roomno(value,reqflag,paramflag):
+def  check_access_roomno(value,reqflag,paramflag):
 
     roomno = Models.Access_Control(rid=value)
     _,status = roomno.getAACData(paramflag)
 
     if reqflag == "put":
-        if status != 404: 
+        if status == 200: 
             return 200
         else:
-            return "Room Does Not Exists Can't Update Query"
+            return 404
 
-def check_time(timein,timeout,userid):
+def check_time(timein,timeout,userid,role):
 
-    dbtimein = Models.Logs().getALog("timein",userid)
-    dbtimeout = Models.Logs().getALog("timeout",userid)
+    dbtimein = Models.Logs().getALog("timein",userid,role)
+    dbtimeout = Models.Logs().getALog("timeout",userid,role)
 
-    # u = datetime.utcnow()
-    # print(u)
-    local_zone = tz.tzlocal()
+    if timein != "":
 
-    
+        if dbtimein == None:
+            return "New"
+        elif dbtimein != "":
+            print("inside the elif")
+
+            # time from API
+            striptimein = datetime.strptime(timein,'%Y-%m-%d %H:%M:%S')
+            print(striptimein)
+
+            # time from DB
+            stripdbtime = datetime.strptime(dbtimein,'%Y-%m-%d %H:%M:%S')
+            print(stripdbtime)
+
+            # calculating time difference between API time and DB time 
+            total_time = (striptimein - stripdbtime)
+            total_time_mins = total_time.total_seconds()/60
+            print(total_time_mins)
+
+            if total_time_mins >= 10:
+                return "replace"
+            else:
+                return "dump"
+        elif dbtimeout != "":
+            pass
+
+        else:
+
+            return False
 
 
-    if dbtimein == "":
-        return "New"
-    elif dbtimein != "":
-        print("inside the elif")
+    elif timeout != "":
 
-        # time from API
-        # rawtime = datetime.fromisoformat(timein).astimezone(local_zone)
-        striptime = datetime.strptime(timein,'%Y-%m-%d %H:%M:%S')
-        # striptime = datetime.fromisoformat(timein)
-        print(striptime.minute)
+        if dbtimeout == "":
+            return "New"
+        elif dbtimeout != "":
 
-        # time from DB
-        # rawdbtime = datetime.fromisoformat(dbtimein)
-        # stripdbtime = datetime.strptime(dbtimein,'%y-%m-%d %H:%M:%S')
-        # stripdbtime = datetime.fromisoformat(stripdbtime)
+            # time from API
+            striptimeout = datetime.strptime(timeout,'%Y-%m-%d %H:%M:%S')
+            print(striptimeout)
 
-        # print(stripdbtime.minute)
+            # time from DB
+            stripdbtimeout = datetime.strptime(dbtimeout,'%Y-%m-%d %H:%M:%S')
+            print(stripdbtimeout)
 
-        # total_time = (stripdbtime - striptime)
-        # total_secs = total_time.total_seconds()  # calculating time difference between api time and db time
-        # print(total_time)
+            # calculating time difference between API time and DB time 
+            total_time = (striptimeout - stripdbtimeout)
+            total_time_mins = total_time.total_seconds()/60
+            print(total_time_mins)
+            
+            if total_time_mins >= 10:
+                return "replace"
+            else:
+                return "dump"
 
-        # if calculated_time >= 10:
-        #     return "replace"
-        # else:
-        #     return "dump"
+        else:
+
+            return False
 
 def check_role(value):
 
@@ -154,3 +179,40 @@ def check_secrets(value):
             rdata = "invalid" 
             
     return rdata
+
+def add_duration(userid,status,timeout):
+
+    if status == 200:
+    
+        status = check_role(userid)
+        dbDuration = Models.Logs().getALog("duration",userid,status)
+
+        if dbDuration == "None":
+            pass
+            dbtimein = Models.Logs().getALog("timein",userid) 
+
+            # time from DB
+            stripdbtime = datetime.strptime(dbtimein,'%Y-%m-%d %H:%M:%S')
+            print(stripdbtime)
+
+            striptimeout = datetime.strptime(timeout,'%Y-%m-%d %H:%M:%S')
+            print(striptimeout)
+
+        else:
+
+            dbtimeout = Models.Logs().getALog("timeout",userid)
+
+            # timeout from API
+            striptimeout = datetime.strptime(timeout,'%Y-%m-%d %H:%M:%S')
+            print(striptimeout)
+
+            # time from DB
+            stripdbtimeout = datetime.strptime(dbtimeout,'%Y-%m-%d %H:%M:%S')
+            print(stripdbtimeout)
+
+            total_time = (striptimeout - stripdbtimeout)
+            total_time_mins = total_time.total_seconds()/60
+            print(total_time_mins)
+
+            total_duration = (total_time_mins + dbDuration)
+

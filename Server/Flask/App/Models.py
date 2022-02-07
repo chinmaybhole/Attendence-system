@@ -130,6 +130,15 @@ class User:
 
             return data
 
+        if flag == "insertaccess":
+            sqldata = c.execute("SELECT srno FROM USERS WHERE userid = :userid",{'userid':self.userid})
+            dictdata = [dict(ix) for ix in sqldata] 
+            print(self.userid) 
+            data = dictdata[0]["srno"]
+
+            return data
+
+
         if sqldata is None or len(dictdata) == 0:
             print("No User data")
             return "No User Found",404
@@ -285,18 +294,22 @@ class Access_Control:
                 if data is not None:
                     print(attri,data)
                     fields_to_set.append(attri)
-                    values_to_set.append(attri+"= "+ "?")
+                    values_to_set.append( "?")
                     field_values.append(getattr(self,attri))
                 
             set_statement = ", ".join(fields_to_set)
             set_values= ",".join(values_to_set)
             
-            print(field_values,fields_to_set,values_to_set)
+            # print(field_values,fields_to_set,values_to_set)
+            print(set_statement)
+            print(set_values)
+            print(field_values)
+
 
             c.execute("INSERT INTO ACCESS_CONTROL("+set_statement+") VALUES("+set_values+")",field_values)
             conn.commit()
 
-            return f"Data of {self.userid} is Added"
+            return f"Data of {self.userid} is Added",200
 
         except Error as e:
             print(str(e))
@@ -305,12 +318,13 @@ class Access_Control:
 
     def getAACData(self,paramflag):
         try:
+
             if paramflag == "rid":
                 sqlrmdata = c.execute("SELECT rid FROM ACCESS_CONTROL WHERE "+paramflag+"= :rid",{"rid":self.rid})
                 rmdatadict = [dict(ix) for ix in sqlrmdata]
 
                 if sqlrmdata is None or len(rmdatadict) == 0:
-                    print("No Access Room data")
+                    print("No Rooms Found Access Control data")
                     return "No Rooms Found",404
                 else:
                     return rmdatadict,200
@@ -320,7 +334,7 @@ class Access_Control:
                 datadict = [dict(ix) for ix in sqldata]
 
                 if sqldata is None or len(datadict) == 0:
-                    print("No Access Control data")
+                    print("No User Found in Access Control data")
                     return "No User Found",404
                 else:
                     return datadict,200
@@ -330,15 +344,19 @@ class Access_Control:
             return e
 
     # display all data
-    def getAllACData(self):
+    def getAllACData(self,flag=None):
         sqldata = c.execute("SELECT * FROM ACCESS_CONTROL")
         dictdata = [dict(ix) for ix in sqldata]
+
+        if flag == "insertlog":
+            sqldata = c.execute("SELECT srno FROM ACCESS_CONTROL")
+            dictdata = [dict(ix) for ix in sqldata]
+            return dictdata[0][-1]
 
         return dictdata
 
     # update the timeout if timein exists 
     def update_access_data(self):
-        
             c.execute("UPDATE ACCESS_CONTROL SET old.timeout= new.timeout WHERE timein")
 
 #################################################### LOGS MODEL #################################################
@@ -393,9 +411,14 @@ class Logs:
             conn.commit()
 
     # insert data to logs
-    def insertDataToLog(conn,c,log):
-        with conn:
-            c.execute(" INSERT INTO LOGS(access_srno) VALUES(:access_srno);",{'access_srno': log.access_srno})
+    def insertDataToLog(self):
+        try:
+            c.execute(" INSERT INTO LOGS(access_srno,timein) VALUES(:access_srno,:timein);",{'access_srno': self.access_srno,'timein':self.timein})
+
+            return "Log Inserted Successfully"
+        except Error as e:
+            print(str(e))
+            return e
 
     # get all logs
     def getAllLogs(self):
@@ -404,19 +427,88 @@ class Logs:
         
         return dictdata
     
-    def getALog(self,paramflag,userid):
+    def getALog(self,paramflag,userid,status=None):
         try:
-            if paramflag == "timein":
+                if status == 1:
+                    sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
+                    userdict = [dict(ix) for ix in sqluserdata]
+                    print(userdict)
 
-                sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = (SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = :userid))",{"userid":userid})
-                dictdata = [dict(ix) for ix in sqldata]
-                data = dictdata[0]["timein"]
+                    acdata = userdict[-1]["srno"] #getting the latest log of Student
 
-                return data
+                    print(acdata)
+
+                    sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+str(acdata))
+                    dictdata = [dict(ix) for ix in sqldata]
+                    print(dictdata)
+                    data = dictdata[0][paramflag]
+                    print(data)
+
+
+                    return data
+
+                elif status == 0:
+                    sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE profid = "+str(userid))
+                    userdict = [dict(ix) for ix in sqluserdata]
+                    acdata = userdict[-1]["srno"] #getting the latest log of Professor
+
+                    print(userdict)
+
+                    sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+acdata)
+                    dictdata = [dict(ix) for ix in sqldata]
+                    data = dictdata[0][paramflag]
+
+                    return data
 
         except Error as e:
             print(str(e))
 
+            return e
+
+    def update_log(self,userid,role):
+        try:
+            fields_to_set = []
+            values_to_set = []
+            print(userid)
+
+            for attri in vars(self):
+                data = getattr(self,attri)
+                if data is not None:
+                    print(attri,data)
+                    fields_to_set.append(attri+"= ")
+                    values_to_set.append(getattr(self,attri))
+                    # field_values.append(getattr(self,attri))
+                
+            set_statement = ", ".join(fields_to_set)
+            set_values= ",".join(values_to_set)
+            
+            print(set_statement+f"'{set_values}'")
+
+            if role == 1:
+           
+                sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
+                userdict = [dict(ix) for ix in sqluserdata]
+                print(userdict)
+
+                acdata = userdict[-1]["srno"] #getting the latest log of Student
+
+                print(acdata)
+            elif role == 0:
+                sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE profid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
+                userdict = [dict(ix) for ix in sqluserdata]
+                print(userdict)
+
+                acdata = userdict[-1]["srno"] #getting the latest log of Student
+
+                print(acdata)
+
+            c.execute("UPDATE LOGS SET "+set_statement+f"'{set_values}' WHERE access_srno = :userid",{"userid":acdata})
+            conn.commit()
+
+            return "Data Updated SuccessFully",200
+
+        except Error as e:
+            print(str(e))
             return e
 
     def __repr__(self):
