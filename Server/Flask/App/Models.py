@@ -1,6 +1,5 @@
 import sqlite3
 from sqlite3.dbapi2 import Error
-from traceback import print_tb
 
 conn = sqlite3.connect('test.sqlite',check_same_thread=False)
 conn.row_factory = sqlite3.Row # This enables column access by name: row['column_name']
@@ -8,7 +7,7 @@ c = conn.cursor()
 c.execute("PRAGMA foreign_keys = ON")
 
 
-#################################################### USERS MODEL #################################################
+#################################################### USERS MODEL ##########################################################
 
 class User:
 
@@ -159,7 +158,7 @@ class User:
     def __repr__(self):
         return f"Users('{self.srno}','{self.userid}','{self.fname}','{self.lname}','{self.passw}','{self.rollno}','{self.div}','{self.dept}','{self.phone}','{self.isStudent}','{self.isAdmin}')"
 
-#################################################### ROOMS MODEL #################################################
+#################################################### ROOMS MODEL ##########################################################
 
 class Rooms:
 
@@ -294,7 +293,7 @@ class Access_Control:
                 if data is not None:
                     print(attri,data)
                     fields_to_set.append(attri)
-                    values_to_set.append( "?")
+                    values_to_set.append("?")
                     field_values.append(getattr(self,attri))
                 
             set_statement = ", ".join(fields_to_set)
@@ -309,7 +308,7 @@ class Access_Control:
             c.execute("INSERT INTO ACCESS_CONTROL("+set_statement+") VALUES("+set_values+")",field_values)
             conn.commit()
 
-            return f"Data of {self.userid} is Added",200
+            return f"Data of user {self.userid} is Added",200
 
         except Error as e:
             print(str(e))
@@ -351,23 +350,24 @@ class Access_Control:
         if flag == "insertlog":
             sqldata = c.execute("SELECT srno FROM ACCESS_CONTROL")
             dictdata = [dict(ix) for ix in sqldata]
-            return dictdata[0][-1]
-
-        return dictdata
+            # print("access data",dictdata[-1]["srno"])
+           
+        return dictdata[-1]["srno"]
 
     # update the timeout if timein exists 
     def update_access_data(self):
             c.execute("UPDATE ACCESS_CONTROL SET old.timeout= new.timeout WHERE timein")
 
-#################################################### LOGS MODEL #################################################
+#################################################### LOGS MODEL ###########################################################
 
 class Logs:
 
-    def __init__(self,access_srno=None,timein=None,timeout=None,srno=None):
+    def __init__(self,access_srno=None,timein=None,timeout=None,srno=None,duration=None):
         self.srno = srno
         self.access_srno = access_srno
         self.timein = timein
         self.timeout = timeout
+        self.duration = duration
 
     # create logs table
     def create_logs(self):
@@ -413,9 +413,15 @@ class Logs:
     # insert data to logs
     def insertDataToLog(self):
         try:
-            c.execute(" INSERT INTO LOGS(access_srno,timein) VALUES(:access_srno,:timein);",{'access_srno': self.access_srno,'timein':self.timein})
+            print(self.access_srno)
+            # print("INSERT INTO LOGS(access_srno,timein) VALUES("+f'{self.access_srno}'+","+f"'{str(self.timein)}'"+")")
 
-            return "Log Inserted Successfully"
+            c.execute("INSERT INTO LOGS(access_srno,timein) VALUES("+f'{self.access_srno}'+","+f"'{str(self.timein)}'"+")")
+            conn.commit()
+            print("rowcount:",c.rowcount)
+            if c.rowcount != 0:
+                return "Log Inserted Successfully",200
+                
         except Error as e:
             print(str(e))
             return e
@@ -432,33 +438,44 @@ class Logs:
                 if status == 1:
                     sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
                     userdict = [dict(ix) for ix in sqluserdata]
-                    print(userdict)
+                    # print("access data",userdict)
+                    
+                    if len(userdict) == 0:
+                        print("no data in access")
+                        return None
+                    else:
+                        acdata = userdict[-1]["srno"] #getting the latest log of Student
 
-                    acdata = userdict[-1]["srno"] #getting the latest log of Student
+                        sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+str(acdata))
+                        dictdata = [dict(ix) for ix in sqldata]
+                        print(len(dictdata))
 
-                    print(acdata)
+                        if sqldata == None or len(dictdata) == []:
+                            print("no data in log")
+                            return None
+                        else:
+                            print("log data",dictdata)
+                            data = dictdata[0][paramflag]
 
-                    sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+str(acdata))
-                    dictdata = [dict(ix) for ix in sqldata]
-                    print(dictdata)
-                    data = dictdata[0][paramflag]
-                    print(data)
-
-
-                    return data
+                            return data
 
                 elif status == 0:
-                    sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE profid = "+str(userid))
+                    sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE profid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
                     userdict = [dict(ix) for ix in sqluserdata]
-                    acdata = userdict[-1]["srno"] #getting the latest log of Professor
 
-                    print(userdict)
+                    if sqluserdata is None or len(userdict) == 0:
+                        return None
+                    else:
+                        acdata = userdict[-1]["srno"] #getting the latest log of Professor
 
-                    sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+acdata)
-                    dictdata = [dict(ix) for ix in sqldata]
-                    data = dictdata[0][paramflag]
+                        sqldata = c.execute("SELECT "+paramflag+" FROM LOGS WHERE access_srno = "+str(acdata))
+                        dictdata = [dict(ix) for ix in sqldata]
+                        if sqluserdata is None or len(userdict) == 0:
+                            return None
+                        else:
+                            data = dictdata[0][paramflag]
 
-                    return data
+                            return data
 
         except Error as e:
             print(str(e))
@@ -488,6 +505,31 @@ class Logs:
            
                 sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
                 userdict = [dict(ix) for ix in sqluserdata]
+
+                acdata = userdict[-1]["srno"] #getting the latest log of Student
+
+            elif role == 0:
+                sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE profid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
+                userdict = [dict(ix) for ix in sqluserdata]
+
+                acdata = userdict[-1]["srno"] #getting the latest log of Student
+
+            c.execute("UPDATE LOGS SET "+set_statement+f"'{set_values}' WHERE access_srno = :userid",{"userid":acdata})
+            conn.commit()
+
+            return "Data Updated SuccessFully",200
+
+        except Error as e:
+            print(str(e))
+            return e
+
+    def add_log_duration(self,role,userid):
+        try:
+
+            if role == 1:
+           
+                sqluserdata = c.execute("SELECT srno FROM ACCESS_CONTROL WHERE userid = (SELECT srno FROM USERS WHERE userid = "+str(userid)+")")
+                userdict = [dict(ix) for ix in sqluserdata]
                 print(userdict)
 
                 acdata = userdict[-1]["srno"] #getting the latest log of Student
@@ -498,17 +540,18 @@ class Logs:
                 userdict = [dict(ix) for ix in sqluserdata]
                 print(userdict)
 
-                acdata = userdict[-1]["srno"] #getting the latest log of Student
+                acdata = userdict[-1]["srno"] #getting the latest log of Professor
 
                 print(acdata)
 
-            c.execute("UPDATE LOGS SET "+set_statement+f"'{set_values}' WHERE access_srno = :userid",{"userid":acdata})
+            c.execute("UPDATE LOGS SET duration = :duration WHERE access_srno = :access_srno",{"duration":self.duration,"access_srno":acdata})
             conn.commit()
 
-            return "Data Updated SuccessFully",200
+            return "duration has been updated successfully!",200
 
         except Error as e:
             print(str(e))
+
             return e
 
     def __repr__(self):
@@ -538,4 +581,60 @@ def download_logs_data():
         print(str(e))
 
         return {"Error": e}
+
+#################################################### TEMP MODEL ###########################################################
+
+class TempTable:
+    def __init__(self,userid=None,timein=None):
+        self.userid = userid
+        self.timein = timein
+        
+    def create_temp(self):
+        try:
+            c.execute("""CREATE TABLE IF NOT EXISTS temp.UserTime 
+                    (   userid INTEGER PRIMARY KEY,
+                        timein TIMESTAMP
+                    );""")
+            conn.commit()
+        except Error as e:
+            print(str(e))
+            return e
+        
+
+    def insert_temp(self):
+        try:
+            c.execute("INSERT INTO UserTime VALUES(:userid,:timein)",{"userid":self.userid,"timein":self.timein})
+            conn.commit()
+
+            if c.rowcount != 0:
+
+                return "Data Registered Successfully",200
+        except Error as e:
+            print(str(e))
+            return e
+
+    def get_temp_data(self):
+        try:
+            sqldata = c.execute("SELECT timein FROM UserTime WHERE userid = :userid",{"userid":self.userid})
+            dictdata = [dict(xi) for xi in sqldata]
+
+            if sqldata is None or len(dictdata) == 0:
+                print("No Temp Data Found")
+                return "No Temp Data Found",404
+            else:
+                data = dictdata[0]["timein"]
+                print(data)
+                return data,200
+
+        except Error as e:
+            print(str(e))
+            return e
+
+    # def delete_temp_record(self):
+    #     try:
+    #         c.execute("DELETE FROM temp WHERE userid = :userid",{"userid":self.userid})
+    #     except Error as e :
+    #         print(str(e))
+
+    #         return e
 #############################################################################################################################

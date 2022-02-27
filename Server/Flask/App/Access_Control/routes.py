@@ -53,8 +53,8 @@ class Access_control(Resource):
                             checkroom = check_roomno(body["rid"],"get")
                             if checkroom == 200:
                                 checkaccessrommno = check_access_roomno(body["rid"],"put","rid")
-                                userid_exists = check_update_user(body["userid"],"userid")
-                                profid_exists = check_update_user(body["userid"],"profid")
+                                userid_exists = check_update_user(body["userid"],body["rid"],"userid")
+                                profid_exists = check_update_user(body["userid"],body["rid"],"profid")
 
                                 print(checkaccessrommno,userid_exists,profid_exists)
 
@@ -74,20 +74,37 @@ class Access_control(Resource):
                                                 
                                             else:
                                                 checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
-                                            
-                                                if checkTime == "replace": # to replace the current data with old
-                                                    if body["timein"] != "":
-                                                        pass
-                                                        log = Models.Logs(timein=body["timein"])
-                                                        logdata,status = log.update_log(body["userid"],role)
+                                                print("checktime",checkTime)
+                                                if checkTime == "New": # new data to insert
 
-                                                        return {"message":logdata},status
+                                                    # getac = Models.Access_Control().getAllACData("insertlog")
+                                                    log = Models.Logs(timeout=body["timeout"])
+                                                    duration_status = add_duration(body["userid"],body["timeout"],role)
+                                                    if duration_status == 200:
+                                                        logdata,status = log.update_log(body["userid"],role)
+                                                        if status == 200:
+                                                            return {"message":logdata},status
+                                            
+                                                elif checkTime == "replace": # to add the current data to temp table
+                                                    if body["timein"] != "":
+                                                        temp = Models.TempTable(userid=body["userid"],timein=body["timein"])
+                                                        temp.create_temp()
+                                                        temp.get_temp_data()
+                                                        status = temp.insert_temp()
+                                                        # log = Models.Logs(timein=body["timein"])
+                                                        # logdata,status = log.update_log(body["userid"],role)
+
+                                                        return {"message":status}
 
                                                     elif body["timeout"] != "":
                                                         log = Models.Logs(timeout=body["timeout"])
-                                                        logdata,status = log.update_log(body["userid"],role)
+                                                        duration_status = add_duration(body["userid"],body["timeout"],role)
 
-                                                        return {"message":logdata},status
+                                                        if duration_status == 200:
+                                                            logdata,status = log.update_log(body["userid"],role)
+                                                            if status == 200:
+                                                                return {"message":logdata},status
+
 
                                                 elif checkTime == "dump": # to dump the current data
 
@@ -109,22 +126,35 @@ class Access_control(Resource):
                                                 
                                             else:
                                                 checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
+
+                                                if checkTime == "New": # new data to insert
+
+                                                    # getac = Models.Access_Control().getAllACData("insertlog")
+                                                    log = Models.Logs(timeout=body["timeout"])
+                                                    duration_status = add_duration(body["userid"],body["timeout"],role)
+                                                    if duration_status == 200:
+                                                        logdata,status = log.update_log(body["userid"],role)
+                                                        if status == 200:
+                                                            return {"message":logdata},status
                             
                                                 if checkTime == "replace": # to replace the current data with old
                                                     if body["timein"] != "":
-                                                        pass
-                                                        log = Models.Logs(timein=body["timein"])
-                                                        logdata,status = log.update_log(body["userid"],role)
+                                                        temp = Models.TempTable(timein=body["timein"])
+                                                        temp.create_temp()
+                                                        tempdata,status = temp.insert_temp()
+                                                        # log = Models.Logs(timein=body["timein"])
+                                                        # logdata,status = log.update_log(body["userid"],role)
 
-                                                        return {"message":logdata},status
+                                                        return {"message":tempdata},status
         
                                                     elif body["timeout"] != "":
                                                         log = Models.Logs(timeout=body["timeout"])
-                                                        logdata,status = log.update_log(body["userid"])
+                                                        duration_status = add_duration(body["userid"],body["timeout"],role)
 
-                                                        add_duration(body["userid"],status,body["timeout"],role)
-
-                                                        return {"message":logdata},status
+                                                        if duration_status == 200:
+                                                            logdata,status = log.update_log(body["userid"],role)
+                                                            if status == 200:
+                                                                return {"message":logdata},status
 
                                                 elif checkTime == "dump": # to dump the current data
 
@@ -141,11 +171,9 @@ class Access_control(Resource):
                                     role = check_role(body["userid"])
                                     if check == True and role == 0: # Professor
                                         if body["timein"] != "" and body["timeout"] != "":
-
-                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+                                            return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
 
                                         elif body["timein"] == "" and body["timeout"] == "":
-
                                             return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
                                             
                                         else:
@@ -168,31 +196,34 @@ class Access_control(Resource):
 
                                     elif check == True and role == 1: #Student
                                         if body["timein"] != "" and body["timeout"] != "":
-
-                                                return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
+                                            return {"Error": "Both Timein and Timeout cannot be entered at the same time"},406
 
                                         elif body["timein"] == "" and body["timeout"] == "":
-
                                             return {"Error": "Both Timein and Timeout cannot be Null at the same time"},406
                                             
                                         else:
                                             profid = None
-
                                             checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
                                             print("checktime: ",checkTime)
                                             if checkTime == "New": # new data to insert
                                                 print(body["userid"])
                                                 getuser = Models.User(userid=body["userid"]).getAUser("insertaccess")
                                                 ac = Models.Access_Control(body["rid"],getuser,profid)
-                                                acdata = ac.insert_access_control()
+                                                acdata,status = ac.insert_access_control()
 
-                                                if acdata == 200:
+                                                if status == 200:
                                                     getac = Models.Access_Control().getAllACData("insertlog")
+                                                    print("access data",getac)
 
                                                     log = Models.Logs(access_srno=getac,timein=body["timein"])
-                                                    logdata = log.insertDataToLog()
+                                                    logdata,status = log.insertDataToLog()
 
-                                                return {"message": acdata}
+                                                    print("log status",status)
+
+                                                    if status == 200:
+                                                        return {"message": acdata}
+                                                    else:
+                                                        return {"Error":"An Error Occored"}
                                     else:
                                         return {"message":"User Role Not Found"},404
                             else:
