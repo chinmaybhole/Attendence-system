@@ -351,8 +351,10 @@ class Access_Control:
             sqldata = c.execute("SELECT srno FROM ACCESS_CONTROL")
             dictdata = [dict(ix) for ix in sqldata]
             # print("access data",dictdata[-1]["srno"])
+            return dictdata[-1]["srno"]
+
            
-        return dictdata[-1]["srno"]
+        return dictdata
 
     # update the timeout if timein exists 
     def update_access_data(self):
@@ -562,11 +564,12 @@ def download_logs_data():
         sqldata = c.execute("""
             SELECT 
             LOGS.srno [Srno],
-            LOGS.timein [Timein],
-            LOGS.timeout [Timeout],
             LOGS.access_srno [Access Id],
             USERS.fname [Name],
-            ROOMS.roomno [Roomno]
+            ROOMS.roomno [Roomno],
+            LOGS.timein [Timein],
+            LOGS.timeout [Timeout],
+            LOGS.duration [Duration]
             FROM LOGS
             LEFT JOIN ACCESS_CONTROL ON LOGS.access_srno = ACCESS_CONTROL.srno
             LEFT JOIN USERS ON USERS.fname = (SELECT fname FROM USERS WHERE CASE WHEN ACCESS_CONTROL.userid IS NOT NULL THEN ACCESS_CONTROL.userid = USERS.srno ELSE ACCESS_CONTROL.profid = USERS.srno END)
@@ -591,11 +594,16 @@ class TempTable:
         
     def create_temp(self):
         try:
-            c.execute("""CREATE TABLE IF NOT EXISTS temp.UserTime 
-                    (   userid INTEGER PRIMARY KEY,
+            c.execute("""CREATE TEMP TABLE IF NOT EXISTS UserTime
+                    (   
+                        userid INTEGER PRIMARY KEY,
                         timein TIMESTAMP
                     );""")
             conn.commit()
+
+            if c.rowcount != 0:
+                print("temp table:",c.lastrowid)
+
         except Error as e:
             print(str(e))
             return e
@@ -603,38 +611,42 @@ class TempTable:
 
     def insert_temp(self):
         try:
+
             c.execute("INSERT INTO UserTime VALUES(:userid,:timein)",{"userid":self.userid,"timein":self.timein})
             conn.commit()
 
             if c.rowcount != 0:
-
                 return "Data Registered Successfully",200
         except Error as e:
             print(str(e))
-            return e
+            return e,400
 
     def get_temp_data(self):
         try:
-            sqldata = c.execute("SELECT timein FROM UserTime WHERE userid = :userid",{"userid":self.userid})
+
+            # checktemp = c.execute("SELECT name FROM sqlite_temp_master;")
+            # print("checktemp:",checktemp)
+
+            sqldata = c.execute("SELECT timein FROM temp.UserTime WHERE userid = :userid",{"userid":self.userid})
             dictdata = [dict(xi) for xi in sqldata]
 
             if sqldata is None or len(dictdata) == 0:
-                print("No Temp Data Found")
                 return "No Temp Data Found",404
             else:
                 data = dictdata[0]["timein"]
-                print(data)
                 return data,200
 
         except Error as e:
             print(str(e))
             return e
 
-    # def delete_temp_record(self):
-    #     try:
-    #         c.execute("DELETE FROM temp WHERE userid = :userid",{"userid":self.userid})
-    #     except Error as e :
-    #         print(str(e))
+    def delete_temp_record(self):
+        try:
+            c.execute("DELETE FROM temp.UserTime WHERE userid = :userid",{"userid":self.userid})
+            conn.commit()
+        except Error as e :
+            print(str(e))
 
-    #         return e
+            return e
+    
 #############################################################################################################################

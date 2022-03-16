@@ -184,7 +184,7 @@ def add_duration(userid,timeout,role):
     """
     print("inside add duration")
     status = check_role(userid)
-    dbDuration = Models.Logs().getALog("duration",userid,status)
+    dbDuration = Models.Logs().getALog("duration",userid,status) 
     print(dbDuration)
     print("status:",status)
     if status == 1: #student
@@ -221,45 +221,38 @@ def add_duration(userid,timeout,role):
 
         else:
             # timeout from API
-            # striptimeout = datetime.strptime(timeout,'%Y-%m-%d %H:%M:%S')
             time_out = timeout.split(" ",1)
             timeout = time_out[1]
             striptimeout = datetime.strptime(timeout,'%H:%M:%S')
-
-            print("API timeout: ",striptimeout)
-            # timeout = striptimeout.timestamp()
+            onlytimeout = striptimeout - datetime(1900, 1, 1)
+            print("API timeout: ",onlytimeout)
 
             # timein from temp DB
-            temptime = Models.TempTable(userid=userid).get_temp_data()
-            temptimein = temptime[0]
-            temp_timein = temptimein.split(" ",1)
+            temptime,status = Models.TempTable(userid=userid).get_temp_data()
+            temp_timein = temptime.split(" ",1)
             temptimein = temp_timein[1]
 
-            # stripdbtimeout = datetime.strptime(temptimein,'%Y-%m-%d %H:%M:%S')
-            stripdbtimeout = datetime.strptime(temptimein,'%H:%M:%S')
+            striptemptimein = datetime.strptime(temptimein,'%H:%M:%S')
+            onlytemptimein = striptemptimein - datetime(1900,1,1)
+            print("DB timein: ",onlytemptimein)
 
-            print("DB timeout: ",stripdbtimeout)
-            # dbtimeout = stripdbtimeout.timestamp()
-
-            total_secs = (striptimeout - stripdbtimeout)
+            total_secs = (onlytimeout - onlytemptimein)
             print("total secs: ",total_secs)
 
-            # Adding db duration and new time difference of api timeout and db timeout 
+            # Adding Log duration and new time difference of api timeout and temp table timeout 
             stripduration = datetime.strptime(dbDuration,"%H:%M:%S")
             onlytime = stripduration - datetime(1900, 1, 1)
-            durationseconds = onlytime.total_seconds()
 
-            total_duration = (total_secs + durationseconds)
-            print("Total time: ",total_duration)
-            conversion = timedelta(seconds=total_duration)
-            time_convert = str(conversion)
+            total_duration = (total_secs + onlytime)
+            print("total_duration:",total_duration)
+            time_convert = str(total_duration)
 
-            log_message,logstatus = Models.Logs(duration=time_convert).add_log_duration(role=role,userid=userid)
+            logstatus,status = Models.Logs(duration=time_convert).add_log_duration(role=role,userid=userid)
 
-            # if logstatus == 200:
-            #     Models.TempTable(userid=userid).delete_temp_record()
+            if status == 200:
+                Models.TempTable(userid=userid).delete_temp_record()
 
-            return logstatus
+            return status
 
     elif status == 0: #professor
 
@@ -288,45 +281,39 @@ def add_duration(userid,timeout,role):
 
         else:
 
-            # dbtimeout = Models.Logs().getALog("timeout",userid,status)
-
             # timeout from API
-            t_timeout = timeout.split(" ",1)
-            timeout = t_timeout[1]
-
-            # striptimeout = datetime.strptime(timeout,'%Y-%m-%d %H:%M:%S')
+            time_out = timeout.split(" ",1)
+            timeout = time_out[1]
             striptimeout = datetime.strptime(timeout,'%H:%M:%S')
-            print("API timeout: ",striptimeout)
-            # timeout = striptimeout.timestamp()
+            onlytimeout = striptimeout - datetime(1900, 1, 1)
+            print("API timeout: ",onlytimeout)
 
             # timein from temp DB
-            temptimein,status = Models.TempTable(userid=userid).get_temp_data()
-            t_timein = temptimein.split(" ",1)
-            temptimein = t_timein[1]
+            temptime,status = Models.TempTable(userid=userid).get_temp_data()
+            temp_timein = temptime.split(" ",1)
+            temptimein = temp_timein[1]
 
             # stripdbtimeout = datetime.strptime(temptimein,'%Y-%m-%d %H:%M:%S')
-            stripdbtimeout = datetime.strptime(temptimein,'%H:%M:%S')
-            print("DB timeout: ",stripdbtimeout)
-            # dbtimeout = stripdbtimeout.timestamp()
+            striptemptimein = datetime.strptime(temptimein,'%H:%M:%S')
+            onlytemptimein = striptemptimein - datetime(1900,1,1)
+            print("DB timein: ",onlytemptimein)
 
-            total_secs = (stripdbtimeout - striptimeout)
+            total_secs = (onlytimeout - onlytemptimein)
             print("total secs: ",total_secs)
 
             # Adding db duration and new time difference of api timeout and db timeout 
             stripduration = datetime.strptime(dbDuration,"%H:%M:%S")
             onlytime = stripduration - datetime(1900, 1, 1)
-            durationseconds = onlytime.total_seconds()
 
-            total_duration = (total_secs + durationseconds)
-            print("Total time: ",total_duration)
-            conversion = timedelta(seconds=total_duration)
-            time_convert = str(conversion)
+            total_duration = (total_secs + onlytime)
+            print("total_duration:",total_duration)
+            time_convert = str(total_duration)
 
-            log_message,logstatus = Models.Logs(duration=time_convert).add_log_duration(role=role,userid=userid)
+            logstatus,status = Models.Logs(duration=time_convert).add_log_duration(role=role,userid=userid)
 
-            # if logstatus == 200:
-                # Models.TempTable(userid=userid).delete_temp_record()
+            if status == 200:
+                Models.TempTable(userid=userid).delete_temp_record()
 
-            return logstatus
+            return status
 
 

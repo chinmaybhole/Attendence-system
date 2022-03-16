@@ -47,7 +47,7 @@ class Access_control(Resource):
             body = request.get_json()
             if body is not None:
                 if body["secrets"] != "":
-                    checkSecret = check_secrets(body["secrets"])
+                    checkSecret = check_secrets(body["secrets"]) 
                     if checkSecret == "valid":
                         if body["rid"] is not None:
                             checkroom = check_roomno(body["rid"],"get")
@@ -77,7 +77,6 @@ class Access_control(Resource):
                                                 print("checktime",checkTime)
                                                 if checkTime == "New": # new data to insert
 
-                                                    # getac = Models.Access_Control().getAllACData("insertlog")
                                                     log = Models.Logs(timeout=body["timeout"])
                                                     duration_status = add_duration(body["userid"],body["timeout"],role)
                                                     if duration_status == 200:
@@ -86,13 +85,11 @@ class Access_control(Resource):
                                                             return {"message":logdata},status
                                             
                                                 elif checkTime == "replace": # to add the current data to temp table
+                                                    
                                                     if body["timein"] != "":
                                                         temp = Models.TempTable(userid=body["userid"],timein=body["timein"])
                                                         temp.create_temp()
-                                                        temp.get_temp_data()
                                                         status = temp.insert_temp()
-                                                        # log = Models.Logs(timein=body["timein"])
-                                                        # logdata,status = log.update_log(body["userid"],role)
 
                                                         return {"message":status}
 
@@ -127,9 +124,8 @@ class Access_control(Resource):
                                             else:
                                                 checkTime = check_time(body["timein"],body["timeout"],body["userid"],role)
 
-                                                if checkTime == "New": # new data to insert
+                                                if checkTime == "New": # update data to insert
 
-                                                    # getac = Models.Access_Control().getAllACData("insertlog")
                                                     log = Models.Logs(timeout=body["timeout"])
                                                     duration_status = add_duration(body["userid"],body["timeout"],role)
                                                     if duration_status == 200:
@@ -139,11 +135,9 @@ class Access_control(Resource):
                             
                                                 if checkTime == "replace": # to replace the current data with old
                                                     if body["timein"] != "":
-                                                        temp = Models.TempTable(timein=body["timein"])
+                                                        temp = Models.TempTable(userid=body["userid"],timein=body["timein"])
                                                         temp.create_temp()
                                                         tempdata,status = temp.insert_temp()
-                                                        # log = Models.Logs(timein=body["timein"])
-                                                        # logdata,status = log.update_log(body["userid"],role)
 
                                                         return {"message":tempdata},status
         

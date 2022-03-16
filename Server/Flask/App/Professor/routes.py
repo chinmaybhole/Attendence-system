@@ -61,7 +61,6 @@ class Download(Resource):
         try:
 
             log = Models.download_logs_data()
-            print(log)
             dataset = log
 
             output = BytesIO()
@@ -70,9 +69,6 @@ class Download(Resource):
             pandadata.to_excel(writer,sheet_name="Sheet1",index=False)
             writer.close()
             output.seek(0)
-
-            print(pandadata)
-
 
             return send_file(output,attachment_filename="Attendance_Sheet.xlsx",as_attachment=True)  
 
