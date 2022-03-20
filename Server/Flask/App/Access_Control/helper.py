@@ -4,7 +4,7 @@ from dateutil import tz
 
 def check_userid(value,flag):
     user = Models.User(userid= value)
-    _,status = user.getAUser() 
+    _,status = user.getAUser(flag=flag) 
 
     if flag == "get":
         if status ==200: 
@@ -36,7 +36,7 @@ def check_userid(value,flag):
 
     if flag == "login":
         if status == 200:
-            return True
+            return True,_
         else:
             return False
 
@@ -315,5 +315,3 @@ def add_duration(userid,timeout,role):
                 Models.TempTable(userid=userid).delete_temp_record()
 
             return status
-
-

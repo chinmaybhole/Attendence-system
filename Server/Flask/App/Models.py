@@ -119,8 +119,10 @@ class User:
         dictdata = [dict(ix) for ix in sqldata]
                 
         if flag == "login":
-            data = dictdata[0]["passw"]
-            return data
+            sqldata = c.execute("SELECT passw,isStudent,isAdmin,isSuperAdmin FROM USERS WHERE userid = :userid",{'userid':self.userid})
+            dictdata = [dict(ix) for ix in sqldata]
+            
+            return dictdata,200
 
         if flag == "role":
             sqldata = c.execute("SELECT isStudent FROM USERS WHERE userid = :userid",{'userid':self.userid})
@@ -130,9 +132,9 @@ class User:
             return data
 
         if flag == "insertaccess":
-            sqldata = c.execute("SELECT srno FROM USERS WHERE userid = :userid",{'userid':self.userid})
-            dictdata = [dict(ix) for ix in sqldata] 
-            print(self.userid) 
+            # sqldata = c.execute("SELECT srno FROM USERS WHERE userid = :userid",{'userid':self.userid})
+            # dictdata = [dict(ix) for ix in sqldata] 
+            # print(self.userid) 
             data = dictdata[0]["srno"]
 
             return data
