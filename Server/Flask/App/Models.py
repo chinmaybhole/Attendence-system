@@ -11,7 +11,7 @@ c.execute("PRAGMA foreign_keys = ON")
 
 class User:
 
-    def __init__(self, userid=None, fname=None, lname=None, passw=None, rollno=None, div=None,dept=None, phone=None, isStudent=None, isAdmin=None,srno=None):
+    def __init__(self, userid=None, fname=None, lname=None, passw=None, rollno=None, div=None,dept=None, phone=None, isStudent=None, isAdmin=None, isSuperAdmin=None,srno=None):
         self.srno = srno
         self.userid = userid
         self.fname = fname
@@ -23,6 +23,7 @@ class User:
         self.phone = phone
         self.isStudent = isStudent
         self.isAdmin = isAdmin
+        self.isSuperAdmin = isSuperAdmin
 
     # create user table
     def create_user():
@@ -46,7 +47,27 @@ class User:
     def insert_user(self):
         #TODOChinmay : To unpack data and plot it to insert command and to return the after process for eg (success, failed)
         try:
-            c.execute("INSERT INTO USERS(userid,fname,lname,passw,rollno,div,dept,phone,isStudent) VALUES(:userid,:fname,:lname,:passw,:rollno,:div,:dept,:phone,:isStudent)",{'userid': self.userid,'fname': self.fname,'lname': self.lname,'passw':self.passw,'rollno': self.rollno,'div':self.div,'dept':self.dept,'phone': self.phone,'isStudent': self.isStudent})
+            fields_to_set = []
+            values_to_set = []
+            field_values = []
+
+            for attri in vars(self):
+                data = getattr(self,attri)
+                if data is not None:
+                    print(attri,data)
+                    fields_to_set.append(attri)
+                    values_to_set.append("?")
+                    field_values.append(getattr(self,attri))
+                
+            set_statement = ", ".join(fields_to_set)
+            set_values= ",".join(values_to_set)
+            
+            # print(field_values,fields_to_set,values_to_set)
+            print(set_statement)
+            print(set_values)
+            print(field_values)
+
+            c.execute("INSERT INTO USERS("+set_statement+") VALUES("+set_values+")",field_values)
             conn.commit()
 
             return f"User {self.userid} added Successfully",200

@@ -146,14 +146,14 @@ class User(Resource):
                     # print(datalist)
 
                     user = Models.User(datalist[1],datalist[2],datalist[3],datalist[4],datalist[5],datalist[6],datalist[7],datalist[8])
-                    response = user.update_user()
+                    response,status = user.update_user()
 
                     print(response)
                    
                     if response == 200:
-                        return {"message":response},200
+                        return {"message":response},status
                     else:
-                        return {"message":response},406
+                        return {"message":response},status
                    
                 else:
                     return {

@@ -38,10 +38,13 @@ def check_userid(value,flag):
                 return {"message":"Invalid Lenght"}
 
     if flag == "post":
-        userid = [int(x) for x in str(value)]
-        data = [2,2,2]
-        if userid[:3] == data:
-            return True
+        if status == 404:
+            userid = [int(x) for x in str(value)]
+            data = [2,2,2]
+            if userid[:3] == data:
+                return True
+            else:
+                return False
         else:
             return False
 

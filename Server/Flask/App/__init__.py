@@ -41,14 +41,15 @@ def create_app(config_class = Config):
 
     return app
 
-def create_access_token(uid):
+def create_access_token(uid,role):
 
     access_token = jwt.encode({
         "user": uid,
+        "role": role,
         "exp": ACCESS_EXPIRES
-    },app.config["SECRET_KEY"],algorithms=["HS256"])
+    },app.config["SECRET_KEY"])
 
-    return access_token
+    return access_token.decode('UTF-8')
 
 def create_refresh_token(uid):
 

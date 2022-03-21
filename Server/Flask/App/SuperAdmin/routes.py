@@ -94,29 +94,29 @@ class User(Resource):
         try:
             
             body = request.get_json()
-            userid = check_userid(body["userid"])
+            userid = check_userid(body["userid"],"post")
             phoneno = check_phoneno(body["phone"])
             h_passw = hash_passwd(body["passw"])  # hashing the password
             if userid == True and phoneno == True:
-                if body["rollno"] == 0 and body["div"] == "None":
+                if body["rollno"] == 0 and body["div"] == "": # Admin or SuperAdmin
                     rollno = None
                     div = None
-                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,rollno,div,body["dept"],body["phone"],body["isStudent"],body["isAdmin"])
-                    response = user.insert_user()
+                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,rollno,div,body["dept"],body["phone"],body["isStudent"],body["isAdmin"],body["isSuperAdmin"])
+                    response,status = user.insert_user()
 
                     return {
                         "message": response
-                    }    
+                    },status    
 
-                else:
-                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,body["rollno"],body["div"],body["dept"],body["phone"],body["isStudent"],body["isAdmin"])
-                    response = user.insert_user()
+                else: # Student
+                    user = Models.User(body["userid"],body["fname"],body["lname"],h_passw,body["rollno"],body["div"],body["dept"],body["phone"],body["isStudent"])
+                    response,status = user.insert_user()
 
                     return {
                         "message": response
-                    } 
+                    },status 
             else:
-                return userid
+                return {"Error":"Userid and Phone no cannot be empty or User Already Exists"},401
 
         except Exception as e:
             print(str(e)), 500

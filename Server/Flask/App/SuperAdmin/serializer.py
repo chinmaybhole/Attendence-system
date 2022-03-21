@@ -22,7 +22,8 @@ super_post_user = api.model(
         "dept": fields.String(),
         "phone": fields.Integer(),
         "isStudent": fields.Integer(),
-        "isAdmin": fields.Integer()
+        "isAdmin": fields.Integer(),
+        "isSuperAdmin":fields.Integer()
     }
 )
 
@@ -36,7 +37,8 @@ super_put_user = api.model(
         "div": fields.String(),
         "dept": fields.String(),
         "phone": fields.Integer(),
-        "isAdmin": fields.Integer()
+        "isAdmin": fields.Integer(),
+        "isSuperAdmin":fields.Integer()
     }
 )
 
