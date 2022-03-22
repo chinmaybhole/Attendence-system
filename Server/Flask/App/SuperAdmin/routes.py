@@ -1,52 +1,16 @@
 from sqlite3.dbapi2 import Error
 from flask import request,send_file
-from App import Models, api
+from App import Models, api, token_required
 from flask_restx import Resource,Namespace
 from App.SuperAdmin.serializer import *
 from App.SuperAdmin.helper import *
 from passw import hash_passwd
 import pandas as pd
 from io import BytesIO
+import ctypes
 
 
 namespace = Namespace('SuperAdmin', description= "All About SuperAdmin API's")
-
-class SuperAdminLogin(Resource):
-    @api.response(200, "Successful")
-    @api.doc(responses=auth_failures)
-    @api.expect(super_admin_login_parser)
-    def post(self):
-        try:
-            body = super_admin_login_parser.parse_args()
-            h_passw = hash_passwd(body["passw"])
-            uid_response = check_userid(body["userid"],"login")
-            pass_response = check_passw(body["userid"],h_passw,"login")
-
-            if uid_response == 200:
-                if pass_response == 200:
-
-                    access_token = create_access_token(body["userid"])
-
-                    refresh_token = create_refresh_token(body["userid"])
-
-                    print("logged In successfully")
-
-                    return{
-                        "access_token":access_token,
-                        "refresh_token":refresh_token
-                    }
-                else:
-                    print("Invalid Password")
-                    return{"message":"Invalid Password"}
-            else:
-                print("Invalid Userid")
-                return{"message":"Invalid Userid"}
-
-        except Error as e:
-            print(str(e))
-            return{
-                "error":e
-            }
 
 class User(Resource):
     # Get User data
@@ -59,8 +23,10 @@ class User(Resource):
         500 : "Internal Server Error"
     })   
     @api.expect(user_parser)
-    def get(self):
+    @token_required
+    def get(self,current_user):
         try:
+            print(current_user)
             body = request.args
             if "userid" in body:
                 check = check_userid(body["userid"],"get") 
@@ -300,6 +266,5 @@ class Download(Resource):
 namespace.add_resource(User,'/dashboard')
 namespace.add_resource(Rooms,'/rooms')
 namespace.add_resource(Download,'/download')
-namespace.add_resource(SuperAdminLogin,'/login')
 
 

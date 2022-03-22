@@ -28,23 +28,24 @@ class Login(Resource):
             h_passw = hash_passwd(auth["password"])
             if h_passw == user["passw"]:
                 if user["isSuperAdmin"] == 1 and user["isAdmin"] == 0 and user["isStudent"] == 0: #SuperAdmin
-                    access_token = create_access_token(auth["userid"],"SuperAdmin")
-                    print(access_token)
+                    access_token = create_access_token(auth["userid"])
+
+                    return{"access_token":access_token},200
                 elif user["isSuperAdmin"] == 0 and user["isAdmin"] == 1 and user["isStudent"] == 0: #Admin
-                    access_token = create_access_token(auth["userid"],"Admin")
+                    access_token = create_access_token(auth["userid"])
+
+                    return{"access_token":access_token},200
+
                 elif user["isSuperAdmin"] == 0 and user["isAdmin"] == 0 and user["isStudent"] == 0: #professor
-                    access_token = create_access_token(auth["userid"],"Professor")
+                    access_token = create_access_token(auth["userid"])
+                    
+                    return{"access_token":access_token},200
 
                 else:
                     print("Not A Valid User")
                     return{"Error":"Valid User Not Found"},404
                     
-
-                return {"message":"Logged in Successfully"},200
             else:
                 return {"Error":"Incorrect Password"},401
-
-        
-        
 
 namespace.add_resource(Login,"/login")

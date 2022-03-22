@@ -11,7 +11,7 @@ api = Api(blueprint)
 app = Flask(__name__)
 
 
-def create_app(config_class = Config):
+def create_app():
 
     app.config.from_object(Config)
      
@@ -41,22 +41,21 @@ def create_app(config_class = Config):
 
     return app
 
-def create_access_token(uid,role):
+def create_access_token(uid):
 
     access_token = jwt.encode({
         "user": uid,
-        "role": role,
         "exp": ACCESS_EXPIRES
-    },app.config["SECRET_KEY"])
+    },app.config["JWT_SECRET_KEY"])
 
-    return access_token.decode('UTF-8')
+    return access_token
 
 def create_refresh_token(uid):
 
     refresh_token = jwt.encode({
         "user": uid,
         "exp": REFRESH_EXPIRES
-    },app.config["SECRET_KEY"],algorithms=["HS256"])
+    },app.config["JWT_SECRET_KEY"])
 
     return refresh_token
 
@@ -64,16 +63,19 @@ def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         token = None
-        if 'x-access-tokens' in request.headers:
-            token = request.headers['x-access-tokens']
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
     
         if not token:
-            return {'message': 'a valid token is missing'}
+            return {'message': 'a valid token is missing'},401
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = Models.User(userid=data['user'])
+            data = jwt.decode(token, app.config['JWT_SECRET_KEY'],"HS256")
+            print("data",data)
+
+            current_user = Models.User(userid=data['user']).getAUser("token")
+            print("current user",current_user)
         except:
-            return {'message': 'token is invalid'}
-    
-        return f(data, *args, **kwargs)
+            return {'message': 'token is invalid'},401
+            
+        return f(current_user, *args, **kwargs)
     return decorator

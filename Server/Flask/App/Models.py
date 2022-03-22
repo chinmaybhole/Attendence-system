@@ -159,6 +159,12 @@ class User:
             data = dictdata[0]["srno"]
 
             return data
+        
+        if flag == "token":
+            sqldata = c.execute("SELECT isStudent,isAdmin,isSuperAdmin FROM USERS WHERE userid = :userid",{'userid':self.userid})
+            dictdata = [dict(ix) for ix in sqldata] 
+
+            return dictdata 
 
 
         if sqldata is None or len(dictdata) == 0:
