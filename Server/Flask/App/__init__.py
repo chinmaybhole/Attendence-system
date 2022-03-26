@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, request, blueprints
+from flask import Flask, Blueprint,request, blueprints
 from flask_restx import Api
 from App import Models
 from functools import wraps
@@ -60,8 +60,8 @@ def create_refresh_token(uid):
     return refresh_token
 
 def token_required(f):
-    @wraps(f)
-    def decorator(*args, **kwargs):
+    # @wraps(f)
+    def decorator(*args,**kargs):
         token = None
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
@@ -73,9 +73,9 @@ def token_required(f):
             print("data",data)
 
             current_user = Models.User(userid=data['user']).getAUser("token")
-            print("current user",current_user)
+            decorator.attrib = current_user[0]
         except:
             return {'message': 'token is invalid'},401
             
-        return f(current_user, *args, **kwargs)
+        return f(*args,**kargs)
     return decorator
